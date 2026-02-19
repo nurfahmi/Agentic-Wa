@@ -29,10 +29,15 @@ exports.login = async (req, res) => {
     if (user.status !== 'ACTIVE') {
       return res.render('auth/login', { layout: false, error: 'Account is inactive' });
     }
-    const token = jwt.sign({ id: user.id, role: user.role }, config.jwtSecret, { expiresIn: '24h' });
+    const token = jwt.sign({ id: user.id, role: user.role }, config.jwtSecret, { expiresIn: '7d' });
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     await auditLog(user.id, 'LOGIN', 'user', user.id, null, req.ip);
-    res.cookie('token', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+    res.cookie('token', token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: config.nodeEnv === 'production',
+      sameSite: 'lax',
+    });
     res.redirect('/dashboard');
   } catch (error) {
     console.error('Login error:', error);
