@@ -9,6 +9,9 @@ const config = require('./config');
 
 const app = express();
 
+// Trust proxy (Cloudflare Tunnel / reverse proxy)
+app.set('trust proxy', 1);
+
 // Security
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
