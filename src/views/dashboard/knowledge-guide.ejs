@@ -1,0 +1,252 @@
+<% locals.pageTitle = 'Panduan Pangkalan Pengetahuan' %>
+
+<div class="max-w-4xl mx-auto space-y-8">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Panduan Pangkalan Pengetahuan</h1>
+      <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">Cara mengurus knowledge base agar AI menjawab dengan tepat</p>
+    </div>
+    <a href="/dashboard/knowledge" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-dark-600 text-sm font-medium text-gray-700 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors">
+      ← Kembali
+    </a>
+  </div>
+
+  <!-- How It Works -->
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 p-6">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <span class="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-500/10 flex items-center justify-center text-violet-600 dark:text-violet-400 text-sm font-bold">1</span>
+      Bagaimana RAG Berfungsi
+    </h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+      <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-center">
+        <div class="text-2xl mb-1">📝</div>
+        <p class="text-xs font-medium text-blue-700 dark:text-blue-400">Anda Tambah Entri</p>
+        <p class="text-[10px] text-blue-500/70 mt-0.5">Teks / fail</p>
+      </div>
+      <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-center">
+        <div class="text-2xl mb-1">🧩</div>
+        <p class="text-xs font-medium text-purple-700 dark:text-purple-400">Text Chunking</p>
+        <p class="text-[10px] text-purple-500/70 mt-0.5">Dipotong ≤500 aksara</p>
+      </div>
+      <div class="p-3 rounded-xl bg-green-50 dark:bg-green-500/10 text-center">
+        <div class="text-2xl mb-1">🔢</div>
+        <p class="text-xs font-medium text-green-700 dark:text-green-400">Embedding</p>
+        <p class="text-[10px] text-green-500/70 mt-0.5">OpenAI vector</p>
+      </div>
+      <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-center">
+        <div class="text-2xl mb-1">🔍</div>
+        <p class="text-xs font-medium text-amber-700 dark:text-amber-400">Semantic Search</p>
+        <p class="text-[10px] text-amber-500/70 mt-0.5">Cosine similarity</p>
+      </div>
+      <div class="p-3 rounded-xl bg-red-50 dark:bg-red-500/10 text-center">
+        <div class="text-2xl mb-1">🤖</div>
+        <p class="text-xs font-medium text-red-700 dark:text-red-400">AI Jawab</p>
+        <p class="text-[10px] text-red-500/70 mt-0.5">Berdasarkan konteks</p>
+      </div>
+    </div>
+    <div class="mt-4 p-4 rounded-xl bg-gray-50 dark:bg-dark-700 border border-gray-200 dark:border-dark-600">
+      <p class="text-sm text-gray-700 dark:text-dark-300 leading-relaxed">
+        <strong>RAG (Retrieval-Augmented Generation)</strong> bermaksud AI tidak meneka jawapan — ia <em>mencari</em> maklumat yang relevan dari pangkalan pengetahuan anda, kemudian menjana jawapan berdasarkan maklumat itu sahaja. Ini menghalang AI dari membuat fakta palsu (hallucination).
+      </p>
+    </div>
+  </div>
+
+  <!-- Categories -->
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 p-6">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <span class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 text-sm font-bold">2</span>
+      Kategori & Fungsinya
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <% categories.forEach(cat => { %>
+        <div class="p-4 rounded-xl border border-gray-200 dark:border-dark-700 hover:border-primary-300 dark:hover:border-primary-500/30 transition-colors">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400"><%= cat.value %></span>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white"><%= cat.label %></h3>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-dark-400"><%= cat.desc %></p>
+        </div>
+      <% }); %>
+    </div>
+    <div class="mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+      <p class="text-sm text-amber-800 dark:text-amber-300">
+        <strong>💡 Tips:</strong> Kategori membantu anda mengorganisasi maklumat. AI akan mencari dari <em>semua</em> kategori yang aktif — tidak perlu risau soal kategori salah, ia masih akan dijumpai oleh semantic search.
+      </p>
+    </div>
+  </div>
+
+  <!-- Adding Content -->
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 p-6">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <span class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-500/10 flex items-center justify-center text-green-600 dark:text-green-400 text-sm font-bold">3</span>
+      Cara Menambah Kandungan
+    </h2>
+
+    <div class="space-y-4">
+      <div class="p-4 rounded-xl border border-gray-200 dark:border-dark-700">
+        <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-2">📝 Entri Manual (Teks)</h3>
+        <ul class="text-xs text-gray-600 dark:text-dark-300 space-y-1.5 list-disc list-inside">
+          <li>Klik <strong>"Tambah Entri"</strong> → pilih kategori → isi tajuk dan kandungan</li>
+          <li>Tulis dalam bahasa semulajadi — AI memahami Bahasa Malaysia dan Inggeris</li>
+          <li>Satu entri = satu topik khusus (contoh: "Syarat Umur" atau "Dokumen IC")</li>
+          <li>Teks panjang akan dipotong kepada chunk 500 aksara secara automatik</li>
+        </ul>
+      </div>
+
+      <div class="p-4 rounded-xl border border-gray-200 dark:border-dark-700">
+        <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-2">📎 Upload Fail</h3>
+        <ul class="text-xs text-gray-600 dark:text-dark-300 space-y-1.5 list-disc list-inside">
+          <li><strong>PDF</strong> — Surat pekeliling, garis panduan, dokumen rasmi</li>
+          <li><strong>Word (.doc/.docx)</strong> — SOP, manual prosedur, laporan</li>
+          <li><strong>TXT</strong> — Fail teks biasa, senarai FAQ</li>
+          <li>Teks diekstrak secara automatik → disimpan sebagai entri KB → dijana embeddings</li>
+          <li>Saiz maksimum: 10MB per fail</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Best Practices -->
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 p-6">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <span class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 text-sm font-bold">4</span>
+      Amalan Terbaik
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="space-y-3">
+        <h3 class="text-sm font-bold text-green-600 dark:text-green-400">✅ Yang Bagus</h3>
+        <div class="space-y-2">
+          <div class="p-3 rounded-lg bg-green-50 dark:bg-green-500/5 text-xs text-gray-700 dark:text-dark-300">
+            <strong>Spesifik:</strong> "Umur minimum: 21 tahun, maksimum: 58 tahun untuk pembiayaan peribadi"
+          </div>
+          <div class="p-3 rounded-lg bg-green-50 dark:bg-green-500/5 text-xs text-gray-700 dark:text-dark-300">
+            <strong>Fakta tepat:</strong> "Kadar keuntungan 4.2% setahun, tempoh 1–10 tahun"
+          </div>
+          <div class="p-3 rounded-lg bg-green-50 dark:bg-green-500/5 text-xs text-gray-700 dark:text-dark-300">
+            <strong>Satu topik per entri:</strong> Asingkan syarat umur, gaji, dokumen, dsb.
+          </div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <h3 class="text-sm font-bold text-red-600 dark:text-red-400">❌ Yang Kurang Baik</h3>
+        <div class="space-y-2">
+          <div class="p-3 rounded-lg bg-red-50 dark:bg-red-500/5 text-xs text-gray-700 dark:text-dark-300">
+            <strong>Terlalu umum:</strong> "Kami menawarkan pelbagai perkhidmatan kewangan"
+          </div>
+          <div class="p-3 rounded-lg bg-red-50 dark:bg-red-500/5 text-xs text-gray-700 dark:text-dark-300">
+            <strong>Bercanggah:</strong> Dua entri yang memberi maklumat berlainan mengenai perkara sama
+          </div>
+          <div class="p-3 rounded-lg bg-red-50 dark:bg-red-500/5 text-xs text-gray-700 dark:text-dark-300">
+            <strong>Terlalu panjang:</strong> Sebuah entri yang mengandungi seluruh buku peraturan (berpuluh ribu aksara)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Examples -->
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 p-6">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <span class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400 text-sm font-bold">5</span>
+      Contoh Entri Mengikut Kategori
+    </h2>
+    <div class="space-y-4">
+      <!-- FAQ Example -->
+      <div class="p-4 rounded-xl bg-gray-50 dark:bg-dark-700 border border-gray-200 dark:border-dark-600">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">FAQ</span>
+          <span class="text-sm font-semibold text-gray-900 dark:text-white">Berapa lama proses kelulusan?</span>
+        </div>
+        <pre class="text-xs text-gray-600 dark:text-dark-400 whitespace-pre-wrap font-mono bg-white dark:bg-dark-800 p-3 rounded-lg border border-gray-200 dark:border-dark-600 overflow-x-auto">Proses kelulusan pembiayaan mengambil masa 3–5 hari bekerja selepas semua dokumen lengkap diterima. Tempoh ini termasuk:
+1. Semakan dokumen: 1 hari bekerja
+2. Pengesahan majikan: 1–2 hari bekerja
+3. Kelulusan jawatankuasa: 1–2 hari bekerja
+
+Pemohon akan dimaklumkan melalui WhatsApp atau SMS sebaik keputusan dibuat.</pre>
+      </div>
+
+      <!-- RULES Example -->
+      <div class="p-4 rounded-xl bg-gray-50 dark:bg-dark-700 border border-gray-200 dark:border-dark-600">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400">RULES</span>
+          <span class="text-sm font-semibold text-gray-900 dark:text-white">Syarat Kelayakan Asas</span>
+        </div>
+        <pre class="text-xs text-gray-600 dark:text-dark-400 whitespace-pre-wrap font-mono bg-white dark:bg-dark-800 p-3 rounded-lg border border-gray-200 dark:border-dark-600 overflow-x-auto">Syarat kelayakan asas untuk pembiayaan koperasi:
+- Warganegara Malaysia
+- Umur: 21–58 tahun
+- Penjawat awam tetap (bukan kontrak)
+- Gaji minimum: RM1,500 sebulan
+- DSR (Debt Service Ratio) tidak melebihi 60%
+- Tiada rekod kebankrapan atau senarai hitam CTOS/CCRIS
+- Tempoh perkhidmatan minimum: 1 tahun</pre>
+      </div>
+
+      <!-- DOCUMENTS Example -->
+      <div class="p-4 rounded-xl bg-gray-50 dark:bg-dark-700 border border-gray-200 dark:border-dark-600">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">DOCUMENTS</span>
+          <span class="text-sm font-semibold text-gray-900 dark:text-white">Senarai Dokumen Wajib</span>
+        </div>
+        <pre class="text-xs text-gray-600 dark:text-dark-400 whitespace-pre-wrap font-mono bg-white dark:bg-dark-800 p-3 rounded-lg border border-gray-200 dark:border-dark-600 overflow-x-auto">Dokumen yang diperlukan untuk permohonan pembiayaan:
+1. Salinan kad pengenalan (depan & belakang)
+2. Slip gaji 3 bulan terkini
+3. Penyata bank 3 bulan terkini
+4. Surat pengesahan jawatan dari majikan
+5. Borang permohonan yang lengkap diisi
+6. Gambar pasport (2 keping)
+
+Semua dokumen boleh dihantar melalui WhatsApp dalam format gambar atau PDF.</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Managing Content -->
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 p-6">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <span class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-500/10 flex items-center justify-center text-red-600 dark:text-red-400 text-sm font-bold">6</span>
+      Mengurus Kandungan
+    </h2>
+    <div class="space-y-3">
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-dark-700">
+        <span class="text-lg">✏️</span>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 dark:text-white">Edit</h4>
+          <p class="text-xs text-gray-500 dark:text-dark-400">Hover pada mana-mana entri → klik ikon edit. Embeddings dijana semula secara automatik.</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-dark-700">
+        <span class="text-lg">🔴</span>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 dark:text-white">Nyahaktif / Aktif</h4>
+          <p class="text-xs text-gray-500 dark:text-dark-400">Toggle status — entri tidak aktif tidak akan muncul dalam carian RAG. Berguna untuk kandungan sementara.</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-dark-700">
+        <span class="text-lg">🗑️</span>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 dark:text-white">Padam</h4>
+          <p class="text-xs text-gray-500 dark:text-dark-400">Memadam entri dan semua embeddings yang berkaitan. Tindakan ini tidak boleh diundur.</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-dark-700">
+        <span class="text-lg">🧪</span>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 dark:text-white">Uji dengan AI Demo</h4>
+          <p class="text-xs text-gray-500 dark:text-dark-400">Selepas menambah kandungan, pergi ke <a href="/dashboard/demo" class="text-primary-600 dark:text-primary-400 underline">AI Demo</a> untuk menguji sama ada AI menjawab dengan betul berdasarkan maklumat yang anda masukkan.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Important Notes -->
+  <div class="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-500/5 dark:to-purple-500/5 rounded-2xl border border-violet-200 dark:border-violet-500/20 p-6">
+    <h2 class="text-lg font-bold text-violet-900 dark:text-violet-300 mb-3">⚠️ Perkara Penting</h2>
+    <ul class="text-sm text-violet-800 dark:text-violet-300/80 space-y-2">
+      <li>• <strong>AI hanya menjawab berdasarkan KB anda</strong> — jika maklumat tiada dalam KB, AI akan menyatakan ia tidak mempunyai jawapan dan akan eskalasi kepada pegawai.</li>
+      <li>• <strong>Embeddings memerlukan OpenAI API key</strong> — pastikan <code class="bg-violet-100 dark:bg-violet-500/20 px-1 rounded">OPENAI_API_KEY</code> dikonfigurasi dalam fail .env.</li>
+      <li>• <strong>Kemas kini segera</strong> — sebarang perubahan pada KB akan berkuat kuasa serta-merta pada perbualan baru.</li>
+      <li>• <strong>AI tidak boleh meluluskan</strong> — walaupun semua syarat dipenuhi, status tertinggi yang AI boleh beri hanyalah "Pra-Layak". Kelulusan muktamad mestilah dari pegawai manusia.</li>
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  name        String
+  email       String    @unique
+  password    String
+  role        Role      @default(AGENT)
+  status      Status    @default(ACTIVE)
+  phone       String?
+  avatar      String?
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  conversations    Conversation[]    @relation("AssignedAgent")
+  escalationsFrom  Escalation[]      @relation("EscalatedBy")
+  escalationsTo    Escalation[]      @relation("AssignedTo")
+  auditLogs        AuditLog[]
+  sentMessages     Message[]         @relation("SentByAgent")
+
+  @@map("users")
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  MASTER_AGENT
+  AGENT
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model Conversation {
+  id              Int                @id @default(autoincrement())
+  waId            String             @unique
+  customerName    String?
+  customerPhone   String
+  status          ConversationStatus @default(AI_HANDLING)
+  eligibility     Eligibility        @default(PENDING)
+  aiConfidence    Float?
+  assignedAgentId Int?
+  metadata        Json?
+  lastMessageAt   DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  assignedAgent      User?              @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+  messages           Message[]
+  aiLogs             AiLog[]
+  escalations        Escalation[]
+  documents          Document[]
+  eligibilityResults EligibilityResult[]
+
+  @@index([status])
+  @@index([assignedAgentId])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+enum ConversationStatus {
+  AI_HANDLING
+  ESCALATED
+  AGENT_HANDLING
+  CLOSED
+}
+
+enum Eligibility {
+  PENDING
+  PRE_ELIGIBLE
+  NOT_ELIGIBLE
+  REQUIRES_REVIEW
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  waMessageId    String?      @unique
+  direction      Direction
+  type           MessageType  @default(TEXT)
+  content        String       @db.Text
+  mediaUrl       String?
+  mediaType      String?
+  sentByAgentId  Int?
+  isAiGenerated  Boolean      @default(false)
+  metadata       Json?
+  timestamp      DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sentByAgent  User?        @relation("SentByAgent", fields: [sentByAgentId], references: [id])
+
+  @@index([conversationId])
+  @@index([timestamp])
+  @@map("messages")
+}
+
+enum Direction {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  DOCUMENT
+  AUDIO
+  VIDEO
+  TEMPLATE
+  INTERACTIVE
+}
+
+model AiLog {
+  id             Int      @id @default(autoincrement())
+  conversationId Int
+  intent         String?
+  confidence     Float?
+  requiredAction String?
+  toolsCalled    Json?
+  ragContext      Json?
+  rawInput       String?  @db.Text
+  rawOutput      String?  @db.Text
+  outputValid    Boolean  @default(true)
+  retryCount     Int      @default(0)
+  processingMs   Int?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("ai_logs")
+}
+
+model Escalation {
+  id             Int              @id @default(autoincrement())
+  conversationId Int
+  reason         EscalationReason
+  description    String?          @db.Text
+  escalatedById  Int?
+  assignedToId   Int?
+  status         EscalationStatus @default(OPEN)
+  resolvedAt     DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  escalatedBy  User?        @relation("EscalatedBy", fields: [escalatedById], references: [id])
+  assignedTo   User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  @@index([conversationId])
+  @@index([status])
+  @@map("escalations")
+}
+
+enum EscalationReason {
+  LOW_CONFIDENCE
+  USER_REQUEST
+  ANGRY_KEYWORDS
+  OCR_FAILURE
+  BORDERLINE_ELIGIBILITY
+  SYSTEM_ERROR
+  MANUAL
+}
+
+enum EscalationStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model KnowledgeBase {
+  id        Int      @id @default(autoincrement())
+  category  String
+  title     String
+  content   String   @db.Text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  embeddings VectorEmbedding[]
+
+  @@index([category])
+  @@map("knowledge_base")
+}
+
+model VectorEmbedding {
+  id              Int      @id @default(autoincrement())
+  knowledgeBaseId Int
+  chunkText       String   @db.Text
+  embedding       Json
+  createdAt       DateTime @default(now())
+
+  knowledgeBase KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+
+  @@index([knowledgeBaseId])
+  @@map("vector_embeddings")
+}
+
+model Document {
+  id             Int            @id @default(autoincrement())
+  conversationId Int
+  type           DocumentType
+  fileName       String
+  filePath       String
+  mimeType       String?
+  ocrResult      Json?
+  ocrStatus      OcrStatus      @default(PENDING)
+  encryptedPath  String?
+  createdAt      DateTime       @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("documents")
+}
+
+enum DocumentType {
+  SALARY_SLIP
+  EMPLOYMENT_LETTER
+  IC_COPY
+  OTHER
+}
+
+enum OcrStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model EligibilityResult {
+  id             Int      @id @default(autoincrement())
+  conversationId Int
+  eligible       Boolean
+  score          Int
+  reason         String?  @db.Text
+  isPenjawatAwam Boolean  @default(false)
+  salary         Float?
+  age            Int?
+  isBlacklisted  Boolean  @default(false)
+  employer       String?
+  rawData        Json?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("eligibility_results")
+}
+
+model KoperasiRule {
+  id        Int      @id @default(autoincrement())
+  ruleKey   String   @unique
+  ruleValue String   @db.Text
+  label     String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("koperasi_rules")
+}
+
+model GovernmentEmployer {
+  id           Int      @id @default(autoincrement())
+  name         String
+  code         String?  @unique
+  ministry     String?
+  category     String?
+  isApproved   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([name])
+  @@map("government_employers")
+}
+
+model SiteSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String
+  entity    String?
+  entityId  Int?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+  @@map("audit_logs")
+}

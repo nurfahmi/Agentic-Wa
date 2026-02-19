@@ -1,0 +1,151 @@
+<% locals.pageTitle = 'Users' %>
+
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Pengurusan Pengguna</h1>
+    <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">Uruskan pengguna dan peranan mereka</p>
+  </div>
+  <button onclick="document.getElementById('createModal').classList.remove('hidden')"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Tambah Pengguna
+  </button>
+</div>
+
+<!-- Users Table -->
+<div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-800">
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Pengguna</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden md:table-cell">Email</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Peranan</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden lg:table-cell">Log Masuk Terakhir</th>
+          <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Tindakan</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-dark-700">
+        <% if (users.length === 0) { %>
+          <tr><td colspan="6" class="px-6 py-12 text-center text-sm text-gray-400 dark:text-dark-500">Tiada pengguna dijumpai</td></tr>
+        <% } %>
+        <% users.forEach(u => { %>
+          <tr class="hover:bg-gray-50 dark:hover:bg-dark-700/50 transition-colors">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-sm font-bold"><%= u.name.charAt(0).toUpperCase() %></div>
+                <div>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-white"><%= u.name %></p>
+                  <p class="text-xs text-gray-400 md:hidden"><%= u.email %></p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500 dark:text-dark-400 hidden md:table-cell"><%= u.email %></td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium
+                <% if (u.role === 'SUPERADMIN') { %>bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400
+                <% } else if (u.role === 'ADMIN') { %>bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400
+                <% } else if (u.role === 'MASTER_AGENT') { %>bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400
+                <% } else { %>bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-dark-300<% } %>
+              "><%= u.role.replace('_', ' ') %></span>
+            </td>
+            <td class="px-6 py-4">
+              <button onclick="toggleStatus(<%= u.id %>)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors
+                <%= u.status === 'ACTIVE' ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 hover:bg-green-100' : 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400 hover:bg-gray-200' %>">
+                <span class="w-1.5 h-1.5 rounded-full <%= u.status === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-400' %>"></span>
+                <%= u.status %>
+              </button>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500 dark:text-dark-400 hidden lg:table-cell">
+              <%= u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString('ms-MY') : '-' %>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% if (totalPages > 1) { %>
+    <div class="px-6 py-3 border-t border-gray-200 dark:border-dark-700 flex items-center justify-between">
+      <p class="text-xs text-gray-500 dark:text-dark-400">Halaman <%= page %> dari <%= totalPages %></p>
+      <div class="flex gap-2">
+        <% if (page > 1) { %><a href="?page=<%= page - 1 %>" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors">Sebelum</a><% } %>
+        <% if (page < totalPages) { %><a href="?page=<%= page + 1 %>" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors">Seterusnya</a><% } %>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<!-- Create User Modal -->
+<div id="createModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" onclick="this.parentElement.classList.add('hidden')"></div>
+  <div class="relative bg-white dark:bg-dark-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-200 dark:border-dark-700">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5">Tambah Pengguna Baru</h3>
+    <form id="createForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Nama</label>
+        <input type="text" name="name" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Email</label>
+        <input type="email" name="email" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Kata Laluan</label>
+        <input type="password" name="password" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Peranan</label>
+        <select name="role" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+          <option value="AGENT">Agent</option>
+          <option value="MASTER_AGENT">Master Agent</option>
+          <option value="ADMIN">Admin</option>
+          <option value="SUPERADMIN">Superadmin</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Telefon</label>
+        <input type="text" name="phone" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 text-sm font-medium text-gray-700 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">Batal</button>
+        <button type="submit" class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const token = document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1];
+
+document.getElementById('createForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const data = Object.fromEntries(form);
+  try {
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) location.reload();
+    else alert(result.error || 'Failed');
+  } catch (err) { alert('Error creating user'); }
+});
+
+async function toggleStatus(id) {
+  try {
+    await fetch(`/api/users/${id}/toggle`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    location.reload();
+  } catch (err) { alert('Error toggling status'); }
+}
+</script>

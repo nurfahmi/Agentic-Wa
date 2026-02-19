@@ -1,0 +1,350 @@
+<% locals.pageTitle = 'AI Demo' %>
+
+<div x-data="demoChat()" class="flex flex-col h-[calc(100vh-7rem)] -m-4 lg:-m-6">
+  
+  <!-- Header -->
+  <div class="flex items-center justify-between px-4 lg:px-6 py-3 bg-white dark:bg-dark-900 border-b border-gray-200 dark:border-dark-700">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-gray-900 dark:text-white">AI Demo Sandbox</h1>
+        <p class="text-xs text-gray-400 dark:text-dark-400">Test Orchestrator + RAG + Tool Calling + OCR</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <template x-if="conversationId">
+        <div class="flex items-center gap-3">
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-dark-800 text-xs">
+            <span class="text-gray-500 dark:text-dark-400">Status:</span>
+            <span :class="convStatus === 'ESCALATED' ? 'text-amber-500' : convStatus === 'CLOSED' ? 'text-gray-400' : 'text-green-500'" class="font-medium" x-text="convStatus"></span>
+          </div>
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-dark-800 text-xs">
+            <span class="text-gray-500 dark:text-dark-400">Eligibility:</span>
+            <span :class="eligibility === 'PRE_ELIGIBLE' ? 'text-green-500' : eligibility === 'NOT_ELIGIBLE' ? 'text-red-500' : 'text-gray-400'" class="font-medium" x-text="eligibility"></span>
+          </div>
+        </div>
+      </template>
+      <button @click="resetSession()" class="px-3 py-2 rounded-xl text-xs font-medium bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex flex-col">
+      <div class="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 bg-gray-50 dark:bg-dark-950" id="demoMessages">
+        
+        <!-- Welcome -->
+        <template x-if="!conversationId">
+          <div class="flex flex-col items-center justify-center h-full text-center px-6">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mb-5 shadow-xl shadow-violet-500/25">
+              <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">AI Agentic Demo</h2>
+            <p class="text-sm text-gray-500 dark:text-dark-400 max-w-md mb-6">Uji sistem AI penuh — RAG, Tool Calling, OCR, Schema Guard. Pipeline sama seperti dari WhatsApp.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl mb-6">
+              <div class="p-3 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 text-left">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center mb-2">
+                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <p class="text-xs font-medium text-gray-900 dark:text-white">RAG</p>
+                <p class="text-[10px] text-gray-400 dark:text-dark-500 mt-0.5">KB Lookup</p>
+              </div>
+              <div class="p-3 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 text-left">
+                <div class="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-500/10 flex items-center justify-center mb-2">
+                  <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <p class="text-xs font-medium text-gray-900 dark:text-white">Tools</p>
+                <p class="text-[10px] text-gray-400 dark:text-dark-500 mt-0.5">Validator, Calc</p>
+              </div>
+              <div class="p-3 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 text-left">
+                <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center mb-2">
+                  <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <p class="text-xs font-medium text-gray-900 dark:text-white">OCR</p>
+                <p class="text-[10px] text-gray-400 dark:text-dark-500 mt-0.5">Slip Gaji</p>
+              </div>
+              <div class="p-3 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 text-left">
+                <div class="w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center mb-2">
+                  <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                </div>
+                <p class="text-xs font-medium text-gray-900 dark:text-white">Guard</p>
+                <p class="text-[10px] text-gray-400 dark:text-dark-500 mt-0.5">JSON Schema</p>
+              </div>
+            </div>
+            <button @click="startSession()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium text-sm hover:from-violet-700 hover:to-purple-700 shadow-lg shadow-violet-500/25 transition-all">
+              Mula Demo Baru
+            </button>
+          </div>
+        </template>
+
+        <!-- Messages -->
+        <template x-for="msg in messages" :key="msg.id">
+          <div :class="msg.direction === 'INBOUND' ? 'flex justify-end' : 'flex justify-start'">
+            <div class="max-w-[80%] lg:max-w-[65%]">
+              <div :class="msg.direction === 'INBOUND' 
+                ? 'bg-primary-500 text-white rounded-2xl rounded-br-md' 
+                : 'bg-white dark:bg-dark-800 text-gray-900 dark:text-white rounded-2xl rounded-bl-md border border-gray-200 dark:border-dark-700'"
+                class="px-4 py-3 shadow-sm">
+                <p class="text-sm leading-relaxed whitespace-pre-wrap" x-text="msg.content"></p>
+              </div>
+              <div class="flex items-center gap-2 mt-1 px-1" :class="msg.direction === 'INBOUND' ? 'justify-end' : ''">
+                <template x-if="msg.isAiGenerated"><span class="text-[10px] text-violet-500">🤖 AI</span></template>
+                <template x-if="msg.type === 'DOCUMENT'"><span class="text-[10px] text-amber-500">📎 OCR</span></template>
+                <span class="text-[10px] text-gray-400 dark:text-dark-500" x-text="new Date(msg.timestamp).toLocaleTimeString('ms-MY', {hour:'2-digit',minute:'2-digit',second:'2-digit'})"></span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Typing indicator -->
+        <template x-if="loading">
+          <div class="flex justify-start">
+            <div class="bg-white dark:bg-dark-800 rounded-2xl rounded-bl-md border border-gray-200 dark:border-dark-700 px-5 py-3 shadow-sm">
+              <div class="flex items-center gap-1.5">
+                <div class="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style="animation-delay: 0ms"></div>
+                <div class="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style="animation-delay: 150ms"></div>
+                <div class="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style="animation-delay: 300ms"></div>
+                <span class="text-xs text-gray-400 dark:text-dark-500 ml-2" x-text="loadingText"></span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Input Area -->
+      <template x-if="conversationId">
+        <div class="p-4 bg-white dark:bg-dark-900 border-t border-gray-200 dark:border-dark-700">
+          <!-- Quick Test Buttons -->
+          <div class="flex flex-wrap items-center gap-1.5 mb-3">
+            <span class="text-[10px] text-gray-400 dark:text-dark-500 font-medium mr-1">Quick:</span>
+            <!-- Greeting -->
+            <button @click="quickSend('Assalamualaikum, saya nak tanya pasal pembiayaan')" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">👋 Salam</button>
+            <!-- Ask about koperasi -->
+            <button @click="quickSend('Apa jenis pembiayaan yang ditawarkan oleh koperasi?')" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">💰 Jenis</button>
+            <!-- Eligible gov staff -->
+            <button @click="quickSend('Saya penjawat awam di Kementerian Kesihatan Malaysia, gaji RM4500, umur 32 tahun')" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/20 transition-colors">✅ Layak</button>
+            <!-- Not eligible -->
+            <button @click="quickSend('Saya bekerja di syarikat swasta, gaji RM1500, umur 60 tahun')" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">❌ Tak Layak</button>
+            <!-- Ask documents -->
+            <button @click="quickSend('Apakah dokumen yang diperlukan untuk permohonan pembiayaan?')" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-500/20 transition-colors hidden sm:inline">📋 Dokumen</button>
+            <!-- DSR check -->
+            <button @click="quickSend('Gaji saya RM3000 dan komitmen bulanan RM1800. Boleh mohon tak?')" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors hidden sm:inline">📊 DSR</button>
+            <!-- Escalation -->
+            <button @click="quickSend('Saya tak puas hati, saya nak bercakap dengan pegawai sekarang!')" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors hidden md:inline">🔥 Escalate</button>
+            <!-- Unknown intent -->
+            <button @click="quickSend('Macam mana nak buat pinjaman rumah?')" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-dark-400 hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors hidden md:inline">❓ Off-topic</button>
+          </div>
+
+          <!-- Input + Upload -->
+          <form @submit.prevent="send()" class="flex items-center gap-2">
+            <!-- File Upload -->
+            <input type="file" id="fileUpload" accept="image/*,.pdf" class="hidden" @change="uploadFile($event)">
+            <button type="button" @click="document.getElementById('fileUpload').click()" :disabled="loading" title="Upload slip gaji / dokumen"
+                    class="p-3 rounded-xl border border-gray-200 dark:border-dark-600 text-gray-500 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-800 hover:text-amber-500 transition-colors disabled:opacity-50">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+            </button>
+            <input x-model="newMessage" type="text" placeholder="Taip mesej untuk uji AI..." :disabled="loading"
+                   class="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent disabled:opacity-50">
+            <button type="submit" :disabled="loading || !newMessage.trim()" class="p-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-lg shadow-violet-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </button>
+          </form>
+        </div>
+      </template>
+    </div>
+
+    <!-- Debug Panel -->
+    <template x-if="conversationId">
+      <div class="hidden lg:flex w-80 flex-col border-l border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-900">
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-dark-700">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+            Debug Panel
+          </h3>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+          <template x-if="lastDebug">
+            <div class="space-y-3">
+              <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Intent</p>
+                <p class="text-sm font-mono text-gray-900 dark:text-white" x-text="lastDebug.intent"></p>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Confidence</p>
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 h-2 rounded-full bg-gray-200 dark:bg-dark-600">
+                    <div class="h-2 rounded-full transition-all duration-500" 
+                         :class="lastDebug.confidence >= 0.75 ? 'bg-green-500' : lastDebug.confidence >= 0.5 ? 'bg-amber-500' : 'bg-red-500'"
+                         :style="`width: ${lastDebug.confidence * 100}%`"></div>
+                  </div>
+                  <span class="text-sm font-mono font-bold" :class="lastDebug.confidence >= 0.75 ? 'text-green-500' : lastDebug.confidence >= 0.5 ? 'text-amber-500' : 'text-red-500'" x-text="(lastDebug.confidence * 100).toFixed(0) + '%'"></span>
+                </div>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Eligibility</p>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
+                      :class="lastDebug.eligibility_status === 'PRE_ELIGIBLE' ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : lastDebug.eligibility_status === 'NOT_ELIGIBLE' ? 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400' : 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400'"
+                      x-text="lastDebug.eligibility_status"></span>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Action</p>
+                <p class="text-sm font-mono text-gray-900 dark:text-white" x-text="lastDebug.required_action"></p>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Escalate</p>
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium" :class="lastDebug.escalate ? 'text-amber-500' : 'text-green-500'">
+                  <span class="w-2 h-2 rounded-full" :class="lastDebug.escalate ? 'bg-amber-500' : 'bg-green-500'"></span>
+                  <span x-text="lastDebug.escalate ? 'Ya — escalated' : 'Tidak'"></span>
+                </span>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Reason</p>
+                <p class="text-xs text-gray-600 dark:text-dark-300 leading-relaxed" x-text="lastDebug.reason"></p>
+              </div>
+
+              <!-- OCR Result (if available) -->
+              <template x-if="lastOcr">
+                <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                  <p class="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2">📎 OCR Result</p>
+                  <div class="space-y-1 text-xs font-mono text-amber-800 dark:text-amber-300">
+                    <p>Name: <span x-text="lastOcr.name || '-'"></span></p>
+                    <p>Employer: <span x-text="lastOcr.employer || '-'"></span></p>
+                    <p>Salary: RM<span x-text="lastOcr.monthly_salary || '0'"></span></p>
+                    <p>Type: <span x-text="lastOcr.employment_type || '-'"></span></p>
+                    <p>Valid: <span x-text="lastOcr.document_valid ? '✅' : '❌'"></span></p>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template x-if="!lastDebug">
+            <div class="flex flex-col items-center justify-center h-full text-center">
+              <svg class="w-8 h-8 text-gray-300 dark:text-dark-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              <p class="text-xs text-gray-400 dark:text-dark-500">Hantar mesej untuk melihat debug AI</p>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<script>
+function demoChat() {
+  const fetchOpts = (method, body) => ({
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+
+  return {
+    conversationId: null,
+    messages: [],
+    newMessage: '',
+    loading: false,
+    loadingText: 'AI sedang berfikir...',
+    lastDebug: null,
+    lastOcr: null,
+    eligibility: 'PENDING',
+    convStatus: 'AI_HANDLING',
+
+    async startSession() {
+      try {
+        const res = await fetch('/api/demo/start', fetchOpts('POST'));
+        const data = await res.json();
+        if (data.success) {
+          this.conversationId = data.conversationId;
+          this.messages = [];
+          this.lastDebug = null;
+          this.lastOcr = null;
+          this.eligibility = 'PENDING';
+          this.convStatus = 'AI_HANDLING';
+        } else {
+          alert('Gagal: ' + (data.error || 'Unknown'));
+        }
+      } catch (err) { alert('Gagal memulakan sesi demo'); }
+    },
+
+    async send() {
+      if (!this.newMessage.trim() || this.loading) return;
+      const msg = this.newMessage.trim();
+      this.newMessage = '';
+
+      this.messages.push({ id: Date.now(), direction: 'INBOUND', content: msg, isAiGenerated: false, type: 'TEXT', timestamp: new Date() });
+      this.scrollToBottom();
+      this.loading = true;
+      this.loadingText = 'AI sedang berfikir...';
+
+      try {
+        const res = await fetch('/api/demo/send', fetchOpts('POST', { conversationId: this.conversationId, message: msg }));
+        const data = await res.json();
+        this.handleResponse(data);
+      } catch (err) {
+        this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: '⚠️ Network error', isAiGenerated: false, type: 'TEXT', timestamp: new Date() });
+      }
+      this.loading = false;
+      this.scrollToBottom();
+    },
+
+    async uploadFile(event) {
+      const file = event.target.files[0];
+      if (!file || this.loading) return;
+      event.target.value = '';
+
+      this.messages.push({ id: Date.now(), direction: 'INBOUND', content: `📎 ${file.name}`, isAiGenerated: false, type: 'DOCUMENT', timestamp: new Date() });
+      this.scrollToBottom();
+      this.loading = true;
+      this.loadingText = 'Memproses OCR & AI...';
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('conversationId', this.conversationId);
+
+        const res = await fetch('/api/demo/upload', { method: 'POST', credentials: 'same-origin', body: formData });
+        const data = await res.json();
+        if (data.ocr) this.lastOcr = data.ocr;
+        this.handleResponse(data);
+      } catch (err) {
+        this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: '⚠️ Upload gagal', isAiGenerated: false, type: 'TEXT', timestamp: new Date() });
+      }
+      this.loading = false;
+      this.scrollToBottom();
+    },
+
+    handleResponse(data) {
+      if (data.success) {
+        this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: data.reply, isAiGenerated: true, type: 'TEXT', timestamp: new Date() });
+        this.lastDebug = data.debug;
+        if (data.debug.eligibility_status) this.eligibility = data.debug.eligibility_status;
+        if (data.debug.escalate) this.convStatus = 'ESCALATED';
+      } else {
+        this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: `⚠️ ${data.error || data.detail || 'Error'}`, isAiGenerated: false, type: 'TEXT', timestamp: new Date() });
+      }
+    },
+
+    quickSend(msg) { this.newMessage = msg; this.send(); },
+
+    async resetSession() {
+      this.conversationId = null;
+      this.messages = [];
+      this.lastDebug = null;
+      this.lastOcr = null;
+      this.eligibility = 'PENDING';
+      this.convStatus = 'AI_HANDLING';
+    },
+
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const el = document.getElementById('demoMessages');
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+    },
+  };
+}
+</script>

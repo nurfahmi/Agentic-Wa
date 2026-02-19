@@ -1,0 +1,119 @@
+<% locals.pageTitle = 'Peraturan Kelayakan' %>
+
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Peraturan Kelayakan</h1>
+    <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">AI Eligibility Calculator menggunakan peraturan ini untuk semakan</p>
+  </div>
+  <button onclick="document.getElementById('ruleModal').classList.remove('hidden')"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Tambah Peraturan
+  </button>
+</div>
+
+<!-- Info Card -->
+<div class="mb-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+  <div class="flex gap-3">
+    <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div>
+      <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Bagaimana ini berfungsi?</p>
+      <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">AI <strong>Eligibility Calculator</strong> menggunakan peraturan di bawah untuk mengira skor kelayakan pelanggan. Setiap peraturan mempunyai kunci unik dan nilai yang boleh dikemaskini. Status <strong>Pra-Layak</strong> sahaja yang diberikan — tiada kelulusan automatik.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Rules Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <% if (rules.length === 0) { %>
+    <div class="col-span-full flex flex-col items-center justify-center py-16">
+      <svg class="w-12 h-12 text-gray-300 dark:text-dark-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <p class="text-sm text-gray-400 dark:text-dark-500">Tiada peraturan dijumpai</p>
+    </div>
+  <% } %>
+  <% rules.forEach(rule => { %>
+    <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm p-5 hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between mb-3">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wider bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <%= rule.ruleKey %>
+        </span>
+        <span class="w-2 h-2 rounded-full <%= rule.isActive ? 'bg-green-500' : 'bg-gray-300' %>"></span>
+      </div>
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3"><%= rule.label %></h3>
+      
+      <form onsubmit="updateRule(event, <%= rule.id %>)">
+        <div class="flex gap-2">
+          <input type="text" name="ruleValue" value="<%= rule.ruleValue %>" class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white font-mono focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+          <button type="submit" class="px-3 py-2 rounded-lg bg-primary-600 text-white text-xs font-medium hover:bg-primary-700 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  <% }); %>
+</div>
+
+<!-- Create Rule Modal -->
+<div id="ruleModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" onclick="this.parentElement.classList.add('hidden')"></div>
+  <div class="relative bg-white dark:bg-dark-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-200 dark:border-dark-700">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5">Tambah Peraturan Baru</h3>
+    <form id="ruleForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Kunci Peraturan *</label>
+        <input type="text" name="ruleKey" required placeholder="cth: max_dsr_ratio" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Label</label>
+        <input type="text" name="label" required placeholder="cth: Nisbah DSR Maksimum" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Nilai *</label>
+        <input type="text" name="ruleValue" required placeholder="cth: 0.6" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('ruleModal').classList.add('hidden')" class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 text-sm font-medium text-gray-700 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">Batal</button>
+        <button type="submit" class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const token = document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1];
+
+document.getElementById('ruleForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const data = Object.fromEntries(form);
+  try {
+    const res = await fetch('/api/rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) location.reload();
+    else alert(result.error || 'Gagal');
+  } catch (err) { alert('Error'); }
+});
+
+async function updateRule(e, id) {
+  e.preventDefault();
+  const ruleValue = e.target.querySelector('[name="ruleValue"]').value;
+  try {
+    const res = await fetch(`/api/rules/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ruleValue }),
+    });
+    const result = await res.json();
+    if (result.success) {
+      const btn = e.target.querySelector('button');
+      btn.innerHTML = '<svg class="w-4 h-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+      setTimeout(() => { btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'; }, 1500);
+    } else alert(result.error || 'Gagal');
+  } catch (err) { alert('Error'); }
+}
+</script>

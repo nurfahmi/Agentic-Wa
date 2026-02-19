@@ -1,0 +1,224 @@
+<% locals.pageTitle = 'Analytics' %>
+
+<!-- Page Header -->
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Laporan Analitik</h1>
+  <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">Prestasi AI, agen, dan eskalasi terperinci</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= stats.totalLeads %></p>
+    <p class="text-xs text-gray-500 dark:text-dark-400 mt-1">Jumlah Leads</p>
+  </div>
+
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= stats.aiHandledPct %>%</p>
+    <p class="text-xs text-gray-500 dark:text-dark-400 mt-1">AI Handled</p>
+  </div>
+
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+      </div>
+    </div>
+    <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= stats.escalatedPct %>%</p>
+    <p class="text-xs text-gray-500 dark:text-dark-400 mt-1">Escalated</p>
+  </div>
+
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+    </div>
+    <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= stats.eligiblePct %>%</p>
+    <p class="text-xs text-gray-500 dark:text-dark-400 mt-1">Pra-Layak</p>
+  </div>
+
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+    </div>
+    <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= stats.closedCount %></p>
+    <p class="text-xs text-gray-500 dark:text-dark-400 mt-1">Kes Selesai</p>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-6 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Leads Harian (7 Hari)</h3>
+    <canvas id="leadsChart" height="200"></canvas>
+  </div>
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-6 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Status Perbualan</h3>
+    <canvas id="statusChart" height="200"></canvas>
+  </div>
+</div>
+
+<!-- Agent Performance Report -->
+<div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm mb-6">
+  <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Laporan Prestasi Agen</h3>
+    <p class="text-xs text-gray-400 dark:text-dark-500 mt-1">Prestasi setiap agen berdasarkan perbualan yang dikendalikan</p>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="border-b border-gray-100 dark:border-dark-700">
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Agen</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Peranan</th>
+          <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Jumlah</th>
+          <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden md:table-cell">Selesai</th>
+          <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden md:table-cell">Escalated</th>
+          <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden lg:table-cell">Pra-Layak</th>
+          <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden lg:table-cell">Avg Confidence</th>
+          <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Kadar Selesai</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-dark-700">
+        <% if (agentPerformance.length === 0) { %>
+          <tr><td colspan="9" class="px-6 py-8 text-center text-sm text-gray-400 dark:text-dark-500">Tiada agen dijumpai</td></tr>
+        <% } %>
+        <% agentPerformance.forEach(agent => { %>
+          <tr class="hover:bg-gray-50 dark:hover:bg-dark-700/50 transition-colors">
+            <td class="px-6 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold"><%= agent.name.charAt(0) %></div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white"><%= agent.name %></span>
+              </div>
+            </td>
+            <td class="px-6 py-3 text-sm text-gray-500 dark:text-dark-400"><%= agent.role.replace('_', ' ') %></td>
+            <td class="px-6 py-3 text-center text-sm font-semibold text-gray-900 dark:text-white"><%= agent.totalConversations %></td>
+            <td class="px-6 py-3 text-center text-sm text-green-600 dark:text-green-400 font-medium hidden md:table-cell"><%= agent.closed %></td>
+            <td class="px-6 py-3 text-center text-sm text-amber-600 dark:text-amber-400 font-medium hidden md:table-cell"><%= agent.escalated %></td>
+            <td class="px-6 py-3 text-center text-sm text-blue-600 dark:text-blue-400 font-medium hidden lg:table-cell"><%= agent.eligible %></td>
+            <td class="px-6 py-3 text-center hidden lg:table-cell">
+              <div class="flex items-center justify-center gap-2">
+                <div class="w-16 h-1.5 rounded-full bg-gray-200 dark:bg-dark-600">
+                  <div class="h-1.5 rounded-full bg-primary-500" style="width: <%= agent.avgConfidence %>%"></div>
+                </div>
+                <span class="text-xs text-gray-500 dark:text-dark-400"><%= agent.avgConfidence %>%</span>
+              </div>
+            </td>
+            <td class="px-6 py-3 text-center">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                <% if (parseInt(agent.closedPct) >= 70) { %>bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400
+                <% } else if (parseInt(agent.closedPct) >= 40) { %>bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400
+                <% } else { %>bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400<% } %>
+              "><%= agent.closedPct %>%</span>
+            </td>
+            <td class="px-6 py-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= agent.status === 'ACTIVE' ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400' %>"><%= agent.status %></span>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Recent Escalations -->
+<div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm">
+  <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Eskalasi Terkini</h3>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="border-b border-gray-100 dark:border-dark-700">
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Pelanggan</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Sebab</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden md:table-cell">Ditugaskan</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden lg:table-cell">Masa</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-dark-700">
+        <% if (recentEscalations.length === 0) { %>
+          <tr><td colspan="5" class="px-6 py-8 text-center text-sm text-gray-400 dark:text-dark-500">Tiada eskalasi</td></tr>
+        <% } %>
+        <% recentEscalations.forEach(esc => { %>
+          <tr class="hover:bg-gray-50 dark:hover:bg-dark-700/50 transition-colors">
+            <td class="px-6 py-3 text-sm text-gray-900 dark:text-white"><%= esc.conversation?.customerName || esc.conversation?.customerPhone || '-' %></td>
+            <td class="px-6 py-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"><%= esc.reason %></span>
+            </td>
+            <td class="px-6 py-3 text-sm text-gray-500 dark:text-dark-400 hidden md:table-cell"><%= esc.assignedTo?.name || 'Belum' %></td>
+            <td class="px-6 py-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium 
+                <% if (esc.status === 'RESOLVED') { %>bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400
+                <% } else { %>bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400<% } %>
+              "><%= esc.status %></span>
+            </td>
+            <td class="px-6 py-3 text-xs text-gray-400 dark:text-dark-500 hidden lg:table-cell"><%= new Date(esc.createdAt).toLocaleString('ms-MY') %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+
+  new Chart(document.getElementById('leadsChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab', 'Ahd'],
+      datasets: [{
+        label: 'Leads',
+        data: [12, 19, 8, 15, 22, 5, 3],
+        backgroundColor: isDark ? 'rgba(59,130,246,0.3)' : 'rgba(59,130,246,0.15)',
+        borderColor: '#3b82f6',
+        borderWidth: 2,
+        borderRadius: 8,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+        x: { grid: { display: false }, ticks: { color: textColor } },
+      },
+    },
+  });
+
+  new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['AI Handling', 'Escalated', 'Agent Handling', 'Closed'],
+      datasets: [{
+        data: [<%= stats.aiHandledPct %>, <%= stats.escalatedPct %>, 10, <%= stats.closedCount || 0 %>],
+        backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'],
+        borderWidth: 0,
+      }],
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: { legend: { position: 'bottom', labels: { color: textColor, padding: 16, usePointStyle: true } } },
+    },
+  });
+});
+</script>

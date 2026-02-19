@@ -1,0 +1,202 @@
+<% locals.pageTitle = 'Chat' %>
+
+<div x-data="chatApp()" class="flex h-[calc(100vh-7rem)] -m-4 lg:-m-6 bg-white dark:bg-dark-900 rounded-2xl border border-gray-200 dark:border-dark-700 overflow-hidden shadow-sm">
+  
+  <!-- Conversation List -->
+  <div :class="selectedConversation ? 'hidden md:flex' : 'flex'" class="w-full md:w-80 lg:w-96 flex-shrink-0 flex-col border-r border-gray-200 dark:border-dark-700">
+    <!-- Search -->
+    <div class="p-4 border-b border-gray-200 dark:border-dark-700">
+      <div class="relative">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" x-model="searchQuery" placeholder="Cari perbualan..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+    </div>
+
+    <!-- Conversations -->
+    <div class="flex-1 overflow-y-auto">
+      <% if (conversations.length === 0) { %>
+        <div class="flex flex-col items-center justify-center h-full text-center px-6">
+          <svg class="w-12 h-12 text-gray-300 dark:text-dark-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <p class="text-sm text-gray-400 dark:text-dark-500">Tiada perbualan lagi</p>
+        </div>
+      <% } %>
+      <% conversations.forEach(conv => { %>
+        <button @click="selectConversation(<%= conv.id %>)" 
+                :class="selectedConversation === <%= conv.id %> ? 'bg-primary-50 dark:bg-primary-500/10 border-l-2 border-primary-500' : 'hover:bg-gray-50 dark:hover:bg-dark-800 border-l-2 border-transparent'"
+                class="w-full flex items-start gap-3 px-4 py-3 text-left transition-colors">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+            <%= conv.customerName ? conv.customerName.charAt(0).toUpperCase() : '?' %>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-semibold text-gray-900 dark:text-white truncate"><%= conv.customerName || conv.customerPhone %></p>
+              <span class="text-[10px] text-gray-400 dark:text-dark-500 flex-shrink-0"><%= conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('ms-MY', {hour:'2-digit',minute:'2-digit'}) : '' %></span>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-dark-400 truncate mt-0.5"><%= conv.messages[0]?.content || 'Tiada mesej' %></p>
+            <div class="flex items-center gap-2 mt-1.5">
+              <!-- Eligibility Badge -->
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium
+                <% if (conv.eligibility === 'PRE_ELIGIBLE') { %>bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400
+                <% } else if (conv.eligibility === 'NOT_ELIGIBLE') { %>bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400
+                <% } else { %>bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400<% } %>
+              "><%= conv.eligibility %></span>
+              <!-- Status -->
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium
+                <% if (conv.status === 'ESCALATED') { %>bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400
+                <% } else if (conv.status === 'AGENT_HANDLING') { %>bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400
+                <% } else if (conv.status === 'CLOSED') { %>bg-gray-100 text-gray-600 dark:bg-dark-600 dark:text-dark-400
+                <% } else { %>bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400<% } %>
+              "><%= conv.status.replace('_', ' ') %></span>
+            </div>
+          </div>
+        </button>
+      <% }); %>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div :class="selectedConversation ? 'flex' : 'hidden md:flex'" class="flex-1 flex flex-col">
+    <!-- No Selection -->
+    <template x-if="!selectedConversation">
+      <div class="flex-1 flex flex-col items-center justify-center text-center px-6">
+        <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-dark-800 flex items-center justify-center mb-4">
+          <svg class="w-10 h-10 text-gray-300 dark:text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pilih Perbualan</h3>
+        <p class="text-sm text-gray-400 dark:text-dark-500 mt-1">Klik pada perbualan di sebelah kiri untuk bermula</p>
+      </div>
+    </template>
+
+    <!-- Active Chat -->
+    <template x-if="selectedConversation">
+      <div class="flex flex-col h-full">
+        <!-- Chat Header -->
+        <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-900">
+          <button @click="selectedConversation = null" class="md:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm">
+            <span x-text="conversationData?.customerName?.charAt(0)?.toUpperCase() || '?'"></span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate" x-text="conversationData?.customerName || conversationData?.customerPhone || ''"></p>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-400 dark:text-dark-400" x-text="conversationData?.customerPhone || ''"></span>
+              <template x-if="conversationData?.aiConfidence">
+                <span class="text-xs text-primary-500">AI: <span x-text="(conversationData.aiConfidence * 100).toFixed(0) + '%'"></span></span>
+              </template>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- Agent Assignment -->
+            <select @change="assignAgent($event.target.value)" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-gray-700 dark:text-dark-300">
+              <option value="">Assign Agent</option>
+              <% agents.forEach(a => { %>
+                <option value="<%= a.id %>"><%= a.name %></option>
+              <% }); %>
+            </select>
+            <!-- Escalate -->
+            <button @click="escalateChat()" class="p-2 rounded-lg text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors" title="Escalate">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-dark-950" id="messagesContainer">
+          <template x-for="msg in messages" :key="msg.id">
+            <div :class="msg.direction === 'OUTBOUND' ? 'flex justify-end' : 'flex justify-start'">
+              <div :class="msg.direction === 'OUTBOUND' 
+                ? 'bg-primary-500 text-white rounded-2xl rounded-br-md max-w-[75%]' 
+                : 'bg-white dark:bg-dark-800 text-gray-900 dark:text-white rounded-2xl rounded-bl-md max-w-[75%] border border-gray-200 dark:border-dark-700'"
+                class="px-4 py-2.5 shadow-sm">
+                <p class="text-sm leading-relaxed whitespace-pre-wrap" x-text="msg.content"></p>
+                <div class="flex items-center gap-1.5 mt-1" :class="msg.direction === 'OUTBOUND' ? 'justify-end' : ''">
+                  <template x-if="msg.isAiGenerated"><span class="text-[10px] opacity-60">🤖 AI</span></template>
+                  <span class="text-[10px] opacity-50" x-text="new Date(msg.timestamp).toLocaleTimeString('ms-MY', {hour:'2-digit',minute:'2-digit'})"></span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Input -->
+        <div class="p-4 border-t border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-900">
+          <form @submit.prevent="sendMessage()" class="flex items-center gap-3">
+            <input x-model="newMessage" type="text" placeholder="Taip mesej..." 
+                   class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <button type="submit" class="p-2.5 rounded-xl bg-primary-600 text-white hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<script>
+function chatApp() {
+  const token = document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1];
+  return {
+    selectedConversation: null,
+    conversationData: null,
+    messages: [],
+    newMessage: '',
+    searchQuery: '',
+
+    async selectConversation(id) {
+      this.selectedConversation = id;
+      try {
+        const res = await fetch(`/api/conversations/${id}/messages`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        this.conversationData = data;
+        this.messages = data.messages || [];
+        this.$nextTick(() => {
+          const container = document.getElementById('messagesContainer');
+          if (container) container.scrollTop = container.scrollHeight;
+        });
+      } catch (err) { console.error('Load messages error:', err); }
+    },
+
+    async sendMessage() {
+      if (!this.newMessage.trim() || !this.selectedConversation) return;
+      const content = this.newMessage;
+      this.newMessage = '';
+      this.messages.push({ id: Date.now(), direction: 'OUTBOUND', content, timestamp: new Date(), isAiGenerated: false });
+      try {
+        await fetch(`/api/conversations/${this.selectedConversation}/reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ content }),
+        });
+      } catch (err) { console.error('Send error:', err); }
+    },
+
+    async assignAgent(agentId) {
+      if (!agentId || !this.selectedConversation) return;
+      try {
+        await fetch(`/api/conversations/${this.selectedConversation}/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ agentId }),
+        });
+      } catch (err) { console.error('Assign error:', err); }
+    },
+
+    async escalateChat() {
+      if (!this.selectedConversation) return;
+      try {
+        await fetch(`/api/conversations/${this.selectedConversation}/escalate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ reason: 'MANUAL' }),
+        });
+        alert('Perbualan telah dieskalasi');
+      } catch (err) { console.error('Escalate error:', err); }
+    },
+  };
+}
+</script>

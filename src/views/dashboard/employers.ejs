@@ -1,0 +1,160 @@
+<% locals.pageTitle = 'Senarai Majikan Kerajaan' %>
+
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Senarai Majikan Kerajaan</h1>
+    <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">AI Validator akan semak nama majikan dari senarai ini</p>
+  </div>
+  <button onclick="document.getElementById('empModal').classList.remove('hidden')"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Tambah Majikan
+  </button>
+</div>
+
+<!-- Info Card -->
+<div class="mb-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+  <div class="flex gap-3">
+    <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div>
+      <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Bagaimana ini berfungsi?</p>
+      <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">Apabila pelanggan menyatakan nama majikan mereka, AI <strong>Government Validator</strong> akan menyemak nama tersebut terhadap senarai ini. Majikan yang diluluskan (<span class="text-green-600 dark:text-green-400">●</span>) akan diterima, manakala yang tidak diluluskan (<span class="text-gray-400">●</span>) akan ditolak.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Employers Table -->
+<div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-800">
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Nama Agensi</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden md:table-cell">Kod</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden lg:table-cell">Kementerian</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider hidden lg:table-cell">Kategori</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-dark-400 uppercase tracking-wider">Tindakan</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-dark-700">
+        <% if (employers.length === 0) { %>
+          <tr><td colspan="6" class="px-6 py-12 text-center text-sm text-gray-400 dark:text-dark-500">Tiada majikan dijumpai</td></tr>
+        <% } %>
+        <% employers.forEach(emp => { %>
+          <tr class="hover:bg-gray-50 dark:hover:bg-dark-700/50 transition-colors">
+            <td class="px-6 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold"><%= emp.name.charAt(0) %></div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white"><%= emp.name %></span>
+              </div>
+            </td>
+            <td class="px-6 py-3 text-sm text-gray-500 dark:text-dark-400 font-mono hidden md:table-cell"><%= emp.code || '-' %></td>
+            <td class="px-6 py-3 text-sm text-gray-500 dark:text-dark-400 hidden lg:table-cell"><%= emp.ministry || '-' %></td>
+            <td class="px-6 py-3 hidden lg:table-cell">
+              <% if (emp.category) { %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium 
+                  <% if (emp.category === 'PERSEKUTUAN') { %>bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400
+                  <% } else if (emp.category === 'NEGERI') { %>bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400
+                  <% } else { %>bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400<% } %>
+                "><%= emp.category %></span>
+              <% } else { %>-<% } %>
+            </td>
+            <td class="px-6 py-3">
+              <button onclick="toggleEmployer(<%= emp.id %>)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors
+                <%= emp.isApproved ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 hover:bg-green-100' : 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400 hover:bg-gray-200' %>">
+                <span class="w-1.5 h-1.5 rounded-full <%= emp.isApproved ? 'bg-green-500' : 'bg-gray-400' %>"></span>
+                <%= emp.isApproved ? 'Diluluskan' : 'Tidak Aktif' %>
+              </button>
+            </td>
+            <td class="px-6 py-3 text-right">
+              <button onclick="deleteEmployer(<%= emp.id %>)" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% if (totalPages > 1) { %>
+    <div class="px-6 py-3 border-t border-gray-200 dark:border-dark-700 flex items-center justify-between">
+      <p class="text-xs text-gray-500 dark:text-dark-400">Halaman <%= page %> dari <%= totalPages %></p>
+      <div class="flex gap-2">
+        <% if (page > 1) { %><a href="?page=<%= page - 1 %>" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors">Sebelum</a><% } %>
+        <% if (page < totalPages) { %><a href="?page=<%= page + 1 %>" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors">Seterusnya</a><% } %>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<!-- Create Modal -->
+<div id="empModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" onclick="this.parentElement.classList.add('hidden')"></div>
+  <div class="relative bg-white dark:bg-dark-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-200 dark:border-dark-700">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5">Tambah Majikan Baru</h3>
+    <form id="empForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Nama Agensi *</label>
+        <input type="text" name="name" required placeholder="cth: Jabatan Perdana Menteri" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Kod</label>
+          <input type="text" name="code" placeholder="cth: JPM" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono uppercase">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Kategori</label>
+          <select name="category" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+            <option value="PERSEKUTUAN">Persekutuan</option>
+            <option value="NEGERI">Negeri</option>
+            <option value="PBT">PBT</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Kementerian</label>
+        <input type="text" name="ministry" placeholder="cth: JPM" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('empModal').classList.add('hidden')" class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 text-sm font-medium text-gray-700 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">Batal</button>
+        <button type="submit" class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const token = document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1];
+
+document.getElementById('empForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const data = Object.fromEntries(form);
+  try {
+    const res = await fetch('/api/employers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) location.reload();
+    else alert(result.error || 'Gagal');
+  } catch (err) { alert('Error'); }
+});
+
+async function toggleEmployer(id) {
+  try {
+    await fetch(`/api/employers/${id}/toggle`, { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } });
+    location.reload();
+  } catch (err) { alert('Error'); }
+}
+
+async function deleteEmployer(id) {
+  if (!confirm('Padam majikan ini?')) return;
+  try {
+    await fetch(`/api/employers/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    location.reload();
+  } catch (err) { alert('Error'); }
+}
+</script>

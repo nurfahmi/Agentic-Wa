@@ -1,0 +1,123 @@
+<% locals.pageTitle = 'Dashboard' %>
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Selamat Datang, <%= user.name %></h1>
+  <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">Ringkasan pantas sistem Koperasi AI</p>
+</div>
+
+<!-- Quick Stats -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= stats.totalLeads %></p>
+        <p class="text-xs text-gray-500 dark:text-dark-400">Jumlah Leads</p>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= stats.escalated %></p>
+        <p class="text-xs text-gray-500 dark:text-dark-400">Perlu Perhatian</p>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= stats.eligible %></p>
+        <p class="text-xs text-gray-500 dark:text-dark-400">Pra-Layak</p>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= stats.closedCount %></p>
+        <p class="text-xs text-gray-500 dark:text-dark-400">Selesai</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions + Recent -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Quick Actions -->
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm p-6">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Tindakan Pantas</h3>
+    <div class="space-y-3">
+      <a href="/dashboard/chat" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-dark-700 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors">
+        <div class="w-9 h-9 rounded-lg bg-green-100 dark:bg-green-500/10 flex items-center justify-center">
+          <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Buka Chat</p>
+          <p class="text-xs text-gray-400 dark:text-dark-400">Lihat perbualan WhatsApp</p>
+        </div>
+      </a>
+      <a href="/dashboard/analytics" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-dark-700 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors">
+        <div class="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
+          <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Laporan Analitik</p>
+          <p class="text-xs text-gray-400 dark:text-dark-400">Prestasi agen & AI</p>
+        </div>
+      </a>
+      <a href="/dashboard/employers" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-dark-700 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors">
+        <div class="w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center">
+          <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Senarai Majikan</p>
+          <p class="text-xs text-gray-400 dark:text-dark-400"><%= stats.totalEmployers %> majikan kerajaan</p>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Recent Conversations -->
+  <div class="lg:col-span-2 bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm">
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 flex items-center justify-between">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Perbualan Terkini</h3>
+      <a href="/dashboard/chat" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">Lihat Semua →</a>
+    </div>
+    <div class="divide-y divide-gray-100 dark:divide-dark-700">
+      <% if (recentConversations.length === 0) { %>
+        <div class="px-6 py-8 text-center text-sm text-gray-400 dark:text-dark-500">Tiada perbualan lagi</div>
+      <% } %>
+      <% recentConversations.forEach(conv => { %>
+        <div class="px-6 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-700/50 transition-colors">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+            <%= conv.customerName ? conv.customerName.charAt(0).toUpperCase() : '?' %>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= conv.customerName || conv.customerPhone %></p>
+            <p class="text-xs text-gray-400 dark:text-dark-400"><%= conv.customerPhone %></p>
+          </div>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium
+            <% if (conv.status === 'ESCALATED') { %>bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400
+            <% } else if (conv.status === 'CLOSED') { %>bg-gray-100 text-gray-600 dark:bg-dark-600 dark:text-dark-400
+            <% } else { %>bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400<% } %>
+          "><%= conv.status.replace('_', ' ') %></span>
+          <% if (conv.assignedAgent) { %>
+            <span class="text-xs text-gray-400 dark:text-dark-500 hidden sm:inline"><%= conv.assignedAgent.name %></span>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
