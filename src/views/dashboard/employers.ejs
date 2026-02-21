@@ -125,7 +125,6 @@
 </div>
 
 <script>
-const token = document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1];
 
 document.getElementById('empForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -134,7 +133,7 @@ document.getElementById('empForm').addEventListener('submit', async (e) => {
   try {
     const res = await fetch('/api/employers', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     const result = await res.json();
@@ -145,7 +144,7 @@ document.getElementById('empForm').addEventListener('submit', async (e) => {
 
 async function toggleEmployer(id) {
   try {
-    await fetch(`/api/employers/${id}/toggle`, { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } });
+    await fetch(`/api/employers/${id}/toggle`, { method: 'PATCH' });
     location.reload();
   } catch (err) { alert('Error'); }
 }
@@ -153,7 +152,7 @@ async function toggleEmployer(id) {
 async function deleteEmployer(id) {
   if (!confirm('Padam majikan ini?')) return;
   try {
-    await fetch(`/api/employers/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    await fetch(`/api/employers/${id}`, { method: 'DELETE' });
     location.reload();
   } catch (err) { alert('Error'); }
 }

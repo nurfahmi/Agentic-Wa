@@ -137,7 +137,6 @@
 
 <script>
 function chatApp() {
-  const token = document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1];
   return {
     selectedConversation: null,
     conversationData: null,
@@ -148,9 +147,7 @@ function chatApp() {
     async selectConversation(id) {
       this.selectedConversation = id;
       try {
-        const res = await fetch(`/api/conversations/${id}/messages`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(`/api/conversations/${id}/messages`);
         const data = await res.json();
         this.conversationData = data;
         this.messages = data.messages || [];
@@ -169,7 +166,7 @@ function chatApp() {
       try {
         await fetch(`/api/conversations/${this.selectedConversation}/reply`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ content }),
         });
       } catch (err) { console.error('Send error:', err); }
@@ -180,7 +177,7 @@ function chatApp() {
       try {
         await fetch(`/api/conversations/${this.selectedConversation}/assign`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ agentId }),
         });
       } catch (err) { console.error('Assign error:', err); }
@@ -191,7 +188,7 @@ function chatApp() {
       try {
         await fetch(`/api/conversations/${this.selectedConversation}/escalate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ reason: 'MANUAL' }),
         });
         alert('Perbualan telah dieskalasi');

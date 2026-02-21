@@ -2,12 +2,12 @@ const OpenAI = require('openai');
 const config = require('../../config');
 const prisma = require('../../config/database');
 const logger = require('../../utils/logger');
-
-const openai = new OpenAI({ apiKey: config.openai.apiKey });
+const { getOpenAIConfig } = require('../../utils/getOpenAIConfig');
 
 async function search(query, topK = 5) {
   try {
-    if (!config.openai.apiKey) {
+    const aiConfig = await getOpenAIConfig();
+    if (!aiConfig.apiKey) {
       logger.warn('OpenAI API key not configured, skipping RAG search');
       return [];
     }
@@ -43,8 +43,10 @@ async function search(query, topK = 5) {
 
 async function generateEmbedding(text) {
   try {
+    const aiConfig = await getOpenAIConfig();
+    const openai = new OpenAI({ apiKey: aiConfig.apiKey });
     const res = await openai.embeddings.create({
-      model: config.openai.embeddingModel,
+      model: 'text-embedding-3-small',
       input: text,
     });
     return res.data[0].embedding;

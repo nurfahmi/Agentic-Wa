@@ -81,7 +81,6 @@
 </div>
 
 <script>
-const token = document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1];
 
 document.getElementById('ruleForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -90,7 +89,7 @@ document.getElementById('ruleForm').addEventListener('submit', async (e) => {
   try {
     const res = await fetch('/api/rules', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     const result = await res.json();
@@ -105,7 +104,7 @@ async function updateRule(e, id) {
   try {
     const res = await fetch(`/api/rules/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ruleValue }),
     });
     const result = await res.json();

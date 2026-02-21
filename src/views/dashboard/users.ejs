@@ -61,7 +61,7 @@
               <%= u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString('ms-MY') : '-' %>
             </td>
             <td class="px-6 py-4 text-right">
-              <button class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors">
+              <button onclick="editUser(<%= u.id %>, '<%= u.name %>', '<%= u.email %>', '<%= u.role %>', '<%= u.phone || '' %>')" class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
               </button>
             </td>
@@ -120,8 +120,47 @@
   </div>
 </div>
 
+<!-- Edit User Modal -->
+<div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" onclick="this.parentElement.classList.add('hidden')"></div>
+  <div class="relative bg-white dark:bg-dark-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-200 dark:border-dark-700">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5">Edit Pengguna</h3>
+    <form id="editForm" class="space-y-4">
+      <input type="hidden" name="id" id="editId">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Nama</label>
+        <input type="text" name="name" id="editName" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Email</label>
+        <input type="email" name="email" id="editEmail" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Kata Laluan Baru <span class="text-xs text-gray-400">(kosongkan jika tidak tukar)</span></label>
+        <input type="password" name="password" id="editPassword" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Peranan</label>
+        <select name="role" id="editRole" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+          <option value="AGENT">Agent</option>
+          <option value="MASTER_AGENT">Master Agent</option>
+          <option value="ADMIN">Admin</option>
+          <option value="SUPERADMIN">Superadmin</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Telefon</label>
+        <input type="text" name="phone" id="editPhone" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 text-sm font-medium text-gray-700 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">Batal</button>
+        <button type="submit" class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">Kemaskini</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-const token = document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1];
 
 document.getElementById('createForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -130,7 +169,7 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
   try {
     const res = await fetch('/api/users', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     const result = await res.json();
@@ -139,12 +178,42 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
   } catch (err) { alert('Error creating user'); }
 });
 
+function editUser(id, name, email, role, phone) {
+  document.getElementById('editId').value = id;
+  document.getElementById('editName').value = name;
+  document.getElementById('editEmail').value = email;
+  document.getElementById('editRole').value = role;
+  document.getElementById('editPhone').value = phone;
+  document.getElementById('editPassword').value = '';
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+document.getElementById('editForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('editId').value;
+  const data = {
+    name: document.getElementById('editName').value,
+    email: document.getElementById('editEmail').value,
+    role: document.getElementById('editRole').value,
+    phone: document.getElementById('editPhone').value,
+  };
+  const password = document.getElementById('editPassword').value;
+  if (password) data.password = password;
+  try {
+    const res = await fetch(`/api/users/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) location.reload();
+    else alert(result.error || 'Gagal kemaskini');
+  } catch (err) { alert('Error updating user'); }
+});
+
 async function toggleStatus(id) {
   try {
-    await fetch(`/api/users/${id}/toggle`, {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await fetch(`/api/users/${id}/toggle`, { method: 'PATCH' });
     location.reload();
   } catch (err) { alert('Error toggling status'); }
 }

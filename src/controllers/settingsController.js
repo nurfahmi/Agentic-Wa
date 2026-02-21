@@ -30,7 +30,7 @@ exports.settingsPage = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
   try {
-    const fields = ['site_name', 'waba_token', 'waba_phone_number_id', 'waba_verify_token', 'webhook_url', 'default_theme'];
+    const fields = ['site_name', 'waba_token', 'waba_phone_number_id', 'waba_verify_token', 'webhook_url', 'default_theme', 'openai_api_key'];
     for (const key of fields) {
       if (req.body[key] !== undefined) {
         await prisma.siteSetting.upsert({
@@ -55,6 +55,9 @@ exports.updateSettings = async (req, res) => {
         create: { key: 'favicon', value: `/uploads/settings/${req.files.favicon[0].filename}` },
       });
     }
+    // Clear OpenAI config cache so new key takes effect immediately
+    const { clearCache } = require('../utils/getOpenAIConfig');
+    clearCache();
     res.json({ success: true });
   } catch (error) {
     console.error('Update settings error:', error);

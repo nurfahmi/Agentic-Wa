@@ -7,8 +7,7 @@ const promptBuilder = require('./promptBuilder');
 const schemaValidator = require('./schemaValidator');
 const ragService = require('../rag/ragService');
 const { getRedis } = require('../../config/redis');
-
-const openai = new OpenAI({ apiKey: config.openai.apiKey });
+const { getOpenAIConfig } = require('../../utils/getOpenAIConfig');
 
 const MAX_RETRIES = 2;
 
@@ -17,6 +16,11 @@ async function processMessage(conversationId, userMessage) {
   let retryCount = 0;
 
   try {
+    // Get dynamic OpenAI config (DB settings → .env fallback)
+    const aiConfig = await getOpenAIConfig();
+    const openai = new OpenAI({ apiKey: aiConfig.apiKey });
+    const aiModel = aiConfig.model;
+
     // 1. Get conversation context
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
@@ -55,7 +59,7 @@ async function processMessage(conversationId, userMessage) {
     let aiResult = null;
     while (retryCount <= MAX_RETRIES) {
       const completion = await openai.chat.completions.create({
-        model: config.openai.model,
+        model: aiModel,
         messages,
         tools: toolDefinitions,
         tool_choice: 'auto',
@@ -81,7 +85,7 @@ async function processMessage(conversationId, userMessage) {
 
         // Get final response after tool execution
         const finalCompletion = await openai.chat.completions.create({
-          model: config.openai.model,
+          model: aiModel,
           messages,
           temperature: 0.3,
           response_format: { type: 'json_object' },
