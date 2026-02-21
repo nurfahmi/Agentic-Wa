@@ -124,7 +124,7 @@ async function processMessage(conversationId, userMessage) {
     }
 
     // 8. Check confidence and decide action
-    if (aiResult.confidence < 0.75 || aiResult.escalate) {
+    if (aiResult.confidence < 0.4) {
       aiResult.escalate = true;
       aiResult.required_action = 'escalate';
       if (!aiResult.reply_text) {

@@ -18,11 +18,11 @@
         <div class="flex items-center gap-3">
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-dark-800 text-xs">
             <span class="text-gray-500 dark:text-dark-400">Status:</span>
-            <span :class="convStatus === 'ESCALATED' ? 'text-amber-500' : convStatus === 'CLOSED' ? 'text-gray-400' : 'text-green-500'" class="font-medium" x-text="convStatus"></span>
+            <span :class="convStatus === 'ESCALATED' ? 'text-amber-500' : convStatus === 'CLOSED' ? 'text-gray-400' : 'text-green-500'" class="font-medium" x-text="statusLabel(convStatus)"></span>
           </div>
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-dark-800 text-xs">
-            <span class="text-gray-500 dark:text-dark-400">Eligibility:</span>
-            <span :class="eligibility === 'PRE_ELIGIBLE' ? 'text-green-500' : eligibility === 'NOT_ELIGIBLE' ? 'text-red-500' : 'text-gray-400'" class="font-medium" x-text="eligibility"></span>
+            <span class="text-gray-500 dark:text-dark-400">Kelayakan:</span>
+            <span :class="eligibility === 'PRE_ELIGIBLE' ? 'text-green-500' : eligibility === 'NOT_ELIGIBLE' ? 'text-red-500' : 'text-gray-400'" class="font-medium" x-text="eligibilityLabel(eligibility)"></span>
           </div>
         </div>
       </template>
@@ -185,24 +185,24 @@
                 </div>
               </div>
               <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
-                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Eligibility</p>
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Kelayakan</p>
                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
                       :class="lastDebug.eligibility_status === 'PRE_ELIGIBLE' ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : lastDebug.eligibility_status === 'NOT_ELIGIBLE' ? 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400' : 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400'"
-                      x-text="lastDebug.eligibility_status"></span>
+                      x-text="eligibilityLabel(lastDebug.eligibility_status)"></span>
               </div>
               <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
                 <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Action</p>
                 <p class="text-sm font-mono text-gray-900 dark:text-white" x-text="lastDebug.required_action"></p>
               </div>
               <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
-                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Escalate</p>
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Eskalasi</p>
                 <span class="inline-flex items-center gap-1.5 text-sm font-medium" :class="lastDebug.escalate ? 'text-amber-500' : 'text-green-500'">
                   <span class="w-2 h-2 rounded-full" :class="lastDebug.escalate ? 'bg-amber-500' : 'bg-green-500'"></span>
-                  <span x-text="lastDebug.escalate ? 'Ya — escalated' : 'Tidak'"></span>
+                  <span x-text="lastDebug.escalate ? 'Ya — ke pegawai' : 'Tidak'"></span>
                 </span>
               </div>
               <div class="p-3 rounded-xl bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
-                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Reason</p>
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-500 uppercase tracking-wider mb-2">Sebab</p>
                 <p class="text-xs text-gray-600 dark:text-dark-300 leading-relaxed" x-text="lastDebug.reason"></p>
               </div>
 
@@ -252,6 +252,13 @@ function demoChat() {
     lastOcr: null,
     eligibility: 'PENDING',
     convStatus: 'AI_HANDLING',
+
+    statusLabel(s) {
+      return { AI_HANDLING: 'AI Sedang Proses', ESCALATED: 'Telah Dieskalasi', AGENT_HANDLING: 'Agen Sedang Proses', CLOSED: 'Selesai' }[s] || s;
+    },
+    eligibilityLabel(s) {
+      return { PENDING: 'Belum Disemak', PRE_ELIGIBLE: 'Pra-Layak', NOT_ELIGIBLE: 'Tidak Layak', REQUIRES_REVIEW: 'Perlu Semakan' }[s] || s;
+    },
 
     async startSession() {
       try {
