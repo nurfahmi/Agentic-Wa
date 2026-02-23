@@ -152,11 +152,13 @@ exports.uploadFile = async (req, res) => {
       },
     });
 
-    // Run OCR  
+    // Run OCR with timeout to avoid 502
     let ocrText = '';
     let ocrResult = {};
     try {
-      const { data: { text } } = await Tesseract.recognize(req.file.path, 'eng+msa');
+      const ocrPromise = Tesseract.recognize(req.file.path, 'eng+msa');
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('OCR timeout')), 15000));
+      const { data: { text } } = await Promise.race([ocrPromise, timeoutPromise]);
       ocrText = text;
       ocrResult = parseOcrText(text);
       await prisma.document.update({
@@ -164,7 +166,7 @@ exports.uploadFile = async (req, res) => {
         data: { ocrResult, ocrStatus: 'COMPLETED' },
       });
     } catch (ocrErr) {
-      logger.error('OCR error:', ocrErr);
+      logger.error('OCR error:', ocrErr.message);
       await prisma.document.update({ where: { id: doc.id }, data: { ocrStatus: 'FAILED' } });
       ocrResult = { error: 'OCR failed', document_valid: false };
     }
