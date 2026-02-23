@@ -4,7 +4,34 @@ const orchestrator = require('../services/ai/orchestrator');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp');
 const Tesseract = require('tesseract.js');
+
+const MAX_FILE_SIZE = 150 * 1024; // 150KB
+
+async function compressImage(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (!['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) return filePath;
+
+  const info = fs.statSync(filePath);
+  if (info.size <= MAX_FILE_SIZE) return filePath;
+
+  let quality = 80;
+  let buf;
+  while (quality >= 20) {
+    buf = await sharp(filePath)
+      .resize({ width: 1200, withoutEnlargement: true })
+      .jpeg({ quality })
+      .toBuffer();
+    if (buf.length <= MAX_FILE_SIZE) break;
+    quality -= 10;
+  }
+
+  const compressedPath = filePath.replace(/\.[^.]+$/, '.jpg');
+  fs.writeFileSync(compressedPath, buf);
+  if (compressedPath !== filePath) fs.unlinkSync(filePath);
+  return compressedPath;
+}
 
 // Multer config for demo uploads
 const demoUploadDir = path.join(__dirname, '../../uploads/demo');
@@ -118,7 +145,7 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-// Upload file → OCR → send extracted text to AI
+// Upload file → compress → OCR only
 exports.uploadFile = async (req, res) => {
   try {
     const { conversationId } = req.body;
@@ -129,13 +156,16 @@ exports.uploadFile = async (req, res) => {
     const conversation = await prisma.conversation.findUnique({ where: { id: parseInt(conversationId) } });
     if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
 
+    // Compress image to max 150KB
+    const compressedPath = await compressImage(req.file.path);
+
     // Store document record
     const doc = await prisma.document.create({
       data: {
         conversationId: conversation.id,
         type: 'SALARY_SLIP',
         fileName: req.file.originalname,
-        filePath: req.file.path,
+        filePath: compressedPath,
         mimeType: req.file.mimetype,
         ocrStatus: 'PROCESSING',
       },
@@ -152,12 +182,12 @@ exports.uploadFile = async (req, res) => {
       },
     });
 
-    // Run OCR with timeout to avoid 502
+    // Run OCR with timeout
     let ocrText = '';
     let ocrResult = {};
     try {
-      const ocrPromise = Tesseract.recognize(req.file.path, 'eng+msa');
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('OCR timeout')), 15000));
+      const ocrPromise = Tesseract.recognize(compressedPath, 'eng+msa');
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('OCR timeout')), 20000));
       const { data: { text } } = await Promise.race([ocrPromise, timeoutPromise]);
       ocrText = text;
       ocrResult = parseOcrText(text);
@@ -171,7 +201,7 @@ exports.uploadFile = async (req, res) => {
       ocrResult = { error: 'OCR failed', document_valid: false };
     }
 
-    // Send OCR result to AI as context
+    // Send OCR result to AI
     const ocrMessage = ocrResult.document_valid
       ? `Pelanggan telah memuat naik slip gaji. Hasil OCR:\nNama: ${ocrResult.name}\nMajikan: ${ocrResult.employer}\nGaji: RM${ocrResult.monthly_salary}\nJenis: ${ocrResult.employment_type}\n\nSila semak dan proses kelayakan.`
       : `Pelanggan telah memuat naik dokumen (${req.file.originalname}). Teks yang dikesan:\n${ocrText.substring(0, 500)}\n\nSila analisa dokumen ini.`;
