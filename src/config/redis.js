@@ -2,8 +2,10 @@ const Redis = require('ioredis');
 const config = require('./index');
 
 let redis = null;
+let failed = false;
 
 function getRedis() {
+  if (failed) return null;
   if (!redis) {
     try {
       redis = new Redis({
@@ -12,15 +14,24 @@ function getRedis() {
         password: config.redis.password,
         maxRetriesPerRequest: null,
         retryStrategy(times) {
-          if (times > 3) return null;
+          if (times > 3) {
+            failed = true;
+            redis = null;
+            return null;
+          }
           return Math.min(times * 200, 2000);
         },
       });
       redis.on('error', (err) => {
-        console.warn('Redis connection error (non-fatal):', err.message);
+        if (!failed) {
+          console.warn('Redis unavailable:', err.message);
+          failed = true;
+          redis = null;
+        }
       });
     } catch (err) {
-      console.warn('Redis unavailable, using in-memory fallback');
+      console.warn('Redis unavailable, running without cache');
+      failed = true;
       redis = null;
     }
   }

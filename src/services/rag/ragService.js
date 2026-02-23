@@ -3,6 +3,10 @@ const config = require('../../config');
 const prisma = require('../../config/database');
 const logger = require('../../utils/logger');
 const { getOpenAIConfig } = require('../../utils/getOpenAIConfig');
+const { getRedis } = require('../../config/redis');
+
+const RAG_CACHE_TTL = 300; // 5 min cache for RAG results
+const EMBEDDING_CACHE_TTL = 600; // 10 min cache for KB embeddings
 
 async function search(query, topK = 5) {
   try {
@@ -12,32 +16,84 @@ async function search(query, topK = 5) {
       return [];
     }
 
+    // Check Redis cache for this query
+    const redis = getRedis();
+    if (redis) {
+      try {
+        const cached = await redis.get(`rag:${query}`);
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+
     // Generate embedding for query
     const embedding = await generateEmbedding(query);
     if (!embedding) return [];
 
-    // Get all active embeddings
-    const allEmbeddings = await prisma.vectorEmbedding.findMany({
-      include: { knowledgeBase: { select: { id: true, title: true, category: true, isActive: true } } },
-    });
+    // Get all active embeddings (cached in Redis or from DB)
+    const allEmbeddings = await getKBEmbeddings();
 
     // Filter active ones and compute cosine similarity
     const scored = allEmbeddings
-      .filter((e) => e.knowledgeBase.isActive)
+      .filter((e) => e.isActive)
       .map((e) => ({
         id: e.knowledgeBaseId,
-        title: e.knowledgeBase.title,
-        category: e.knowledgeBase.category,
+        title: e.title,
+        category: e.category,
         content: e.chunkText,
         score: cosineSimilarity(embedding, e.embedding),
       }))
       .sort((a, b) => b.score - a.score)
       .slice(0, topK);
 
-    return scored.filter((s) => s.score > 0.3);
+    const results = scored.filter((s) => s.score > 0.3);
+
+    // Cache results
+    if (redis && results.length > 0) {
+      try { await redis.set(`rag:${query}`, JSON.stringify(results), 'EX', RAG_CACHE_TTL); } catch {}
+    }
+
+    return results;
   } catch (error) {
     logger.error('RAG search error:', error);
     return [];
+  }
+}
+
+// Cache KB embeddings in Redis to avoid fetching all from DB every request
+async function getKBEmbeddings() {
+  const redis = getRedis();
+  if (redis) {
+    try {
+      const cached = await redis.get('rag:kb_embeddings');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+  }
+
+  const allEmbeddings = await prisma.vectorEmbedding.findMany({
+    include: { knowledgeBase: { select: { id: true, title: true, category: true, isActive: true } } },
+  });
+
+  const mapped = allEmbeddings.map((e) => ({
+    knowledgeBaseId: e.knowledgeBaseId,
+    title: e.knowledgeBase.title,
+    category: e.knowledgeBase.category,
+    isActive: e.knowledgeBase.isActive,
+    chunkText: e.chunkText,
+    embedding: e.embedding,
+  }));
+
+  if (redis) {
+    try { await redis.set('rag:kb_embeddings', JSON.stringify(mapped), 'EX', EMBEDDING_CACHE_TTL); } catch {}
+  }
+
+  return mapped;
+}
+
+// Clear KB cache when knowledge base is updated
+function clearKBCache() {
+  const redis = getRedis();
+  if (redis) {
+    try { redis.del('rag:kb_embeddings'); } catch {}
   }
 }
 
@@ -76,6 +132,9 @@ async function indexKnowledgeBase(knowledgeBaseId) {
       }
     }
 
+    // Clear cache so new data is picked up
+    clearKBCache();
+
     logger.info(`Indexed KB entry ${knowledgeBaseId}: ${chunks.length} chunks`);
   } catch (error) {
     logger.error('Index KB error:', error);
@@ -110,4 +169,4 @@ function cosineSimilarity(a, b) {
   return mag === 0 ? 0 : dot / mag;
 }
 
-module.exports = { search, generateEmbedding, indexKnowledgeBase };
+module.exports = { search, generateEmbedding, indexKnowledgeBase, clearKBCache };
