@@ -3,11 +3,15 @@ const logger = require('../utils/logger');
 const orchestrator = require('../services/ai/orchestrator');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const Tesseract = require('tesseract.js');
 
 // Multer config for demo uploads
+const demoUploadDir = path.join(__dirname, '../../uploads/demo');
+if (!fs.existsSync(demoUploadDir)) fs.mkdirSync(demoUploadDir, { recursive: true });
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../../uploads/demo')),
+  destination: (req, file, cb) => cb(null, demoUploadDir),
   filename: (req, file, cb) => cb(null, `demo-${Date.now()}-${file.originalname}`),
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
