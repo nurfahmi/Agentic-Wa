@@ -15,6 +15,14 @@ async function start() {
     await prisma.$connect();
     logger.info('Database connected');
 
+    // Start BullMQ message worker for AI processing
+    try {
+      require('./queues/workers/messageWorker');
+      logger.info('Message worker started');
+    } catch (err) {
+      logger.warn('Message worker failed to start (Redis may be unavailable):', err.message);
+    }
+
     // Check if any users exist — if not, generate one-time setup URL
     const userCount = await prisma.user.count();
     if (userCount === 0) {
@@ -36,9 +44,14 @@ async function start() {
   }
 }
 
-process.on('SIGTERM', async () => {
+// Graceful shutdown for both SIGTERM (production) and SIGINT (Ctrl+C dev)
+async function shutdown() {
+  logger.info('Shutting down gracefully...');
   await prisma.$disconnect();
   process.exit(0);
-});
+}
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 start();

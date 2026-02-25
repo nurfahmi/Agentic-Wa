@@ -4,7 +4,6 @@ const dashboardController = require('../controllers/dashboardController');
 const userController = require('../controllers/userController');
 const settingsController = require('../controllers/settingsController');
 const chatController = require('../controllers/chatController');
-const knowledgeController = require('../controllers/knowledgeController');
 const demoController = require('../controllers/demoController');
 
 // All dashboard routes require authentication
@@ -35,8 +34,28 @@ router.get('/rules', authorize('SUPERADMIN', 'ADMIN'), dashboardController.rules
 router.get('/settings', authorize('SUPERADMIN'), settingsController.settingsPage);
 router.post('/settings', authorize('SUPERADMIN'), settingsController.uploadMiddleware, settingsController.updateSettings);
 
-// Knowledge Base - Admin+ only
-router.get('/knowledge', authorize('SUPERADMIN', 'ADMIN'), knowledgeController.knowledgePage);
-router.get('/knowledge/guide', authorize('SUPERADMIN', 'ADMIN'), knowledgeController.guidePage);
+// AI Settings - Admin+ only
+const aiSettingsController = require('../controllers/aiSettingsController');
+router.get('/ai-settings', authorize('SUPERADMIN', 'ADMIN'), aiSettingsController.aiSettingsPage);
+router.post('/ai-settings', authorize('SUPERADMIN', 'ADMIN'), aiSettingsController.updateAiSettings);
+
+// Duty Agents - Admin+ only
+const dutyAgentController = require('../controllers/dutyAgentController');
+router.get('/duty-agents', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.listAgents);
+router.post('/duty-agents', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.createAgent);
+router.put('/duty-agents/:id', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.updateAgent);
+router.post('/duty-agents/:id/toggle', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.toggleAgent);
+router.delete('/duty-agents/:id', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.deleteAgent);
+router.post('/duty-agents/reset', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.resetCounts);
+
+// Chat Examples - Admin+ only
+const chatExampleController = require('../controllers/chatExampleController');
+router.get('/chat-examples', authorize('SUPERADMIN', 'ADMIN'), chatExampleController.listExamples);
+router.post('/chat-examples', authorize('SUPERADMIN', 'ADMIN'), chatExampleController.addExample);
+router.post('/chat-examples/upload', authorize('SUPERADMIN', 'ADMIN'), chatExampleController.uploadMiddleware, chatExampleController.uploadChat);
+router.post('/chat-examples/clean', authorize('SUPERADMIN', 'ADMIN'), chatExampleController.cleanAll);
+router.delete('/chat-examples/all', authorize('SUPERADMIN', 'ADMIN'), chatExampleController.deleteAll);
+router.post('/chat-examples/:id/toggle', authorize('SUPERADMIN', 'ADMIN'), chatExampleController.toggleExample);
+router.delete('/chat-examples/:id', authorize('SUPERADMIN', 'ADMIN'), chatExampleController.deleteExample);
 
 module.exports = router;

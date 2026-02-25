@@ -89,7 +89,10 @@ exports.sendMessage = async (req, res) => {
       return res.status(400).json({ error: 'conversationId and message required' });
     }
 
-    const conversation = await prisma.conversation.findUnique({ where: { id: parseInt(conversationId) } });
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: parseInt(conversationId) },
+      include: { escalations: { orderBy: { createdAt: 'desc' }, take: 1 } },
+    });
     if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
 
     // Store user message
@@ -103,8 +106,36 @@ exports.sendMessage = async (req, res) => {
       },
     });
 
+    // If escalated within silence window, AI stays silent
+    if (conversation.status === 'ESCALATED' && conversation.escalations.length > 0) {
+      const { getAiSettings } = require('../utils/getAiSettings');
+      const aiSettings = await getAiSettings();
+      const silenceHours = parseInt(aiSettings.ai_silence_hours) || 24;
+      const escalatedAt = conversation.escalations[0].createdAt;
+      const hoursSince = (Date.now() - new Date(escalatedAt).getTime()) / (1000 * 60 * 60);
+      if (hoursSince < silenceHours) {
+        return res.json({
+          success: true,
+          reply: null,
+          silent: true,
+          debug: { reason: `Telah dieskalasi ${Math.round(hoursSince)}j lalu. AI diam sehingga ${silenceHours}j.` },
+        });
+      }
+      // After 24 hours, resume AI handling
+      await prisma.conversation.update({ where: { id: conversation.id }, data: { status: 'AI_HANDLING' } });
+    }
+
     // Run through the full AI orchestrator pipeline
     const aiResult = await orchestrator.processMessage(conversation.id, message);
+
+    // Check escalation and get duty agent
+    const escalationService = require('../services/escalationService');
+    const escalated = await escalationService.checkAutoEscalation(conversation.id, message, aiResult);
+
+    let replyText = aiResult.reply_text;
+    if (escalated && escalated.dutyAgent) {
+      replyText += `\n\nPegawai bertugas: ${escalated.dutyAgent.name}\nNo. telefon: ${escalated.dutyAgent.phone}`;
+    }
 
     // Store AI response
     await prisma.message.create({
@@ -112,7 +143,7 @@ exports.sendMessage = async (req, res) => {
         conversationId: conversation.id,
         direction: 'OUTBOUND',
         type: 'TEXT',
-        content: aiResult.reply_text,
+        content: replyText,
         isAiGenerated: true,
       },
     });
@@ -123,13 +154,14 @@ exports.sendMessage = async (req, res) => {
       updateData.eligibility = aiResult.eligibility_status;
     }
     if (aiResult.confidence) updateData.aiConfidence = aiResult.confidence;
-    if (aiResult.escalate) updateData.status = 'ESCALATED';
+    if (escalated && escalated.escalated) updateData.status = 'ESCALATED';
+    else if (aiResult.escalate) updateData.status = 'ESCALATED';
 
     await prisma.conversation.update({ where: { id: conversation.id }, data: updateData });
 
     res.json({
       success: true,
-      reply: aiResult.reply_text,
+      reply: replyText,
       debug: {
         intent: aiResult.intent,
         confidence: aiResult.confidence,
@@ -137,6 +169,7 @@ exports.sendMessage = async (req, res) => {
         eligibility_status: aiResult.eligibility_status,
         escalate: aiResult.escalate,
         reason: aiResult.reason,
+        dutyAgent: escalated?.dutyAgent?.name || null,
       },
     });
   } catch (error) {

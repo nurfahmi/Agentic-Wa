@@ -10,6 +10,7 @@ module.exports = {
     token: process.env.WABA_TOKEN,
     phoneNumberId: process.env.WABA_PHONE_NUMBER_ID,
     verifyToken: process.env.WABA_VERIFY_TOKEN,
+    appSecret: process.env.WABA_APP_SECRET,
     apiVersion: process.env.WABA_API_VERSION || 'v21.0',
     get apiUrl() {
       return `https://graph.facebook.com/${this.apiVersion}/${this.phoneNumberId}`;

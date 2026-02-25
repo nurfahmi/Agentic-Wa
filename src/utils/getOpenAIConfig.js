@@ -1,28 +1,33 @@
 const prisma = require('../config/database');
 const config = require('../config');
 
-let cache = { apiKey: null, ts: 0 };
+let cache = { apiKey: null, model: null, ts: 0 };
 const CACHE_TTL = 60000; // 60 seconds
-const MODEL = 'gpt-4o'; // Best model with text + vision/OCR support
 
 async function getOpenAIConfig() {
   if (Date.now() - cache.ts < CACHE_TTL && cache.apiKey) {
-    return { apiKey: cache.apiKey, model: MODEL };
+    return { apiKey: cache.apiKey, model: cache.model };
   }
 
   try {
-    const row = await prisma.siteSetting.findUnique({ where: { key: 'openai_api_key' } });
-    const apiKey = (row && row.value) || config.openai.apiKey;
+    const [keyRow, modelRow] = await Promise.all([
+      prisma.siteSetting.findUnique({ where: { key: 'openai_api_key' } }),
+      prisma.siteSetting.findUnique({ where: { key: 'openai_model' } }),
+    ]);
 
-    cache = { apiKey, ts: Date.now() };
-    return { apiKey, model: MODEL };
+    const apiKey = (keyRow && keyRow.value) || config.openai.apiKey;
+    const model = (modelRow && modelRow.value) || config.openai.model || 'gpt-4o';
+
+    cache = { apiKey, model, ts: Date.now() };
+    return { apiKey, model };
   } catch {
-    return { apiKey: config.openai.apiKey, model: MODEL };
+    const model = config.openai.model || 'gpt-4o';
+    return { apiKey: config.openai.apiKey, model };
   }
 }
 
 function clearCache() {
-  cache = { apiKey: null, ts: 0 };
+  cache = { apiKey: null, model: null, ts: 0 };
 }
 
 module.exports = { getOpenAIConfig, clearCache };

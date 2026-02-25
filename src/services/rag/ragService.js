@@ -8,6 +8,17 @@ const { getRedis } = require('../../config/redis');
 const RAG_CACHE_TTL = 300; // 5 min cache for RAG results
 const EMBEDDING_CACHE_TTL = 600; // 10 min cache for KB embeddings
 
+// Cached OpenAI client for embeddings
+let _openaiClient = null;
+let _cachedApiKey = null;
+
+function getOpenAIClient(apiKey) {
+  if (_openaiClient && _cachedApiKey === apiKey) return _openaiClient;
+  _openaiClient = new OpenAI({ apiKey });
+  _cachedApiKey = apiKey;
+  return _openaiClient;
+}
+
 async function search(query, topK = 5) {
   try {
     const aiConfig = await getOpenAIConfig();
@@ -73,6 +84,10 @@ async function getKBEmbeddings() {
     include: { knowledgeBase: { select: { id: true, title: true, category: true, isActive: true } } },
   });
 
+  if (allEmbeddings.length > 10000) {
+    logger.warn(`RAG: ${allEmbeddings.length} embeddings loaded into memory. Consider using a vector database (pgvector/Pinecone) for better performance.`);
+  }
+
   const mapped = allEmbeddings.map((e) => ({
     knowledgeBaseId: e.knowledgeBaseId,
     title: e.knowledgeBase.title,
@@ -100,9 +115,9 @@ function clearKBCache() {
 async function generateEmbedding(text) {
   try {
     const aiConfig = await getOpenAIConfig();
-    const openai = new OpenAI({ apiKey: aiConfig.apiKey });
+    const openai = getOpenAIClient(aiConfig.apiKey);
     const res = await openai.embeddings.create({
-      model: 'text-embedding-3-small',
+      model: config.openai.embeddingModel || 'text-embedding-3-small',
       input: text,
     });
     return res.data[0].embedding;

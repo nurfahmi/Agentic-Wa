@@ -30,7 +30,15 @@ exports.settingsPage = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
   try {
-    const fields = ['site_name', 'waba_token', 'waba_phone_number_id', 'waba_verify_token', 'webhook_url', 'default_theme', 'openai_api_key'];
+    const fields = [
+      'site_name', 'default_theme', 'webhook_url',
+      'waba_token', 'waba_phone_number_id', 'waba_verify_token', 'waba_app_secret', 'waba_api_version',
+      'openai_api_key', 'openai_model',
+      'ai_agent_name', 'ai_koperasi_name', 'ai_greeting_message',
+      'ai_eligible_message', 'ai_not_eligible_message', 'ai_escalation_message',
+      'ai_slip_received_message', 'ai_product_info', 'ai_custom_instructions',
+      'ai_escalation_triggers', 'ai_silence_hours',
+    ];
     for (const key of fields) {
       if (req.body[key] !== undefined) {
         await prisma.siteSetting.upsert({
@@ -55,9 +63,13 @@ exports.updateSettings = async (req, res) => {
         create: { key: 'favicon', value: `/uploads/settings/${req.files.favicon[0].filename}` },
       });
     }
-    // Clear OpenAI config cache so new key takes effect immediately
-    const { clearCache } = require('../utils/getOpenAIConfig');
-    clearCache();
+    // Clear all caches so new values take effect immediately
+    const { clearCache: clearOpenAI } = require('../utils/getOpenAIConfig');
+    const { clearCache: clearWaba } = require('../utils/getWabaConfig');
+    const { clearCache: clearAi } = require('../utils/getAiSettings');
+    clearOpenAI();
+    clearWaba();
+    clearAi();
     res.json({ success: true });
   } catch (error) {
     console.error('Update settings error:', error);

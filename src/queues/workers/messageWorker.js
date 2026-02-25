@@ -19,6 +19,24 @@ try {
     logger.info(`Processing message for conversation ${conversationId}`);
 
     try {
+      // Check if escalated within silence window — AI stays silent
+      const { getAiSettings } = require('../../utils/getAiSettings');
+      const conv = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        include: { escalations: { orderBy: { createdAt: 'desc' }, take: 1 } },
+      });
+      if (conv && conv.status === 'ESCALATED' && conv.escalations.length > 0) {
+        const aiSettings = await getAiSettings();
+        const silenceHours = parseInt(aiSettings.ai_silence_hours) || 24;
+        const hoursSince = (Date.now() - new Date(conv.escalations[0].createdAt).getTime()) / (1000 * 60 * 60);
+        if (hoursSince < silenceHours) {
+          logger.info(`Conversation ${conversationId} escalated ${Math.round(hoursSince)}h ago, AI silent (${silenceHours}h window)`);
+          return;
+        }
+        // After 24h, resume AI
+        await prisma.conversation.update({ where: { id: conversationId }, data: { status: 'AI_HANDLING' } });
+      }
+
       // Run through AI orchestrator
       const aiResult = await orchestrator.processMessage(conversationId, messageContent);
 
@@ -29,7 +47,14 @@ try {
       if (aiResult.reply_text) {
         const conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
         if (conversation) {
-          await whatsappService.sendText(conversation.customerPhone, aiResult.reply_text);
+          let replyText = aiResult.reply_text;
+
+          // If escalated, append duty agent info
+          if (escalated && escalated.dutyAgent) {
+            replyText += `\n\nPegawai bertugas: ${escalated.dutyAgent.name}\nNo. telefon: ${escalated.dutyAgent.phone}`;
+          }
+
+          await whatsappService.sendText(conversation.customerPhone, replyText);
 
           // Store outbound message
           await prisma.message.create({
@@ -37,23 +62,31 @@ try {
               conversationId,
               direction: 'OUTBOUND',
               type: 'TEXT',
-              content: aiResult.reply_text,
+              content: replyText,
               isAiGenerated: true,
             },
           });
         }
       }
 
-      // Update conversation eligibility if changed
+      // Update conversation status based on result
       if (aiResult.eligibility_status && aiResult.eligibility_status !== 'PENDING') {
+        let newStatus = 'AI_HANDLING';
+        if (escalated && escalated.escalated) newStatus = 'ESCALATED';
+        else if (aiResult.eligibility_status === 'NOT_ELIGIBLE') newStatus = 'CLOSED';
+
         await prisma.conversation.update({
           where: { id: conversationId },
           data: {
             eligibility: aiResult.eligibility_status,
             aiConfidence: aiResult.confidence,
-            status: escalated ? 'ESCALATED' : 'AI_HANDLING',
+            status: newStatus,
           },
         });
+
+        if (newStatus === 'CLOSED') {
+          logger.info(`Conversation ${conversationId} closed: NOT_ELIGIBLE`);
+        }
       }
     } catch (error) {
       logger.error(`Worker error for conversation ${conversationId}:`, error);

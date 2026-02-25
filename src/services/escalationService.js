@@ -1,19 +1,38 @@
 const prisma = require('../config/database');
 const logger = require('../utils/logger');
+const { getAiSettings } = require('../utils/getAiSettings');
 
-const ANGRY_KEYWORDS = ['marah', 'bodoh', 'stupid', 'useless', 'scam', 'tipu', 'tidak berguna', 'complaint', 'aduan', 'saman'];
+const ANGRY_KEYWORDS = ['marah', 'bodoh', 'stupid', 'useless', 'scam', 'tipu', 'tidak berguna', 'complaint', 'aduan', 'saman', 'babi', 'sial'];
+const HUMAN_KEYWORDS = ['agent', 'pegawai', 'manusia', 'human', 'orang', 'cakap dengan orang'];
+const FOLLOWUP_KEYWORDS = ['follow up', 'nak teruskan', 'berminat', 'nak apply', 'nak mohon', 'bagaimana nak mohon', 'saya setuju', 'proceed', 'seterusnya', 'langkah seterusnya', 'nak buat pinjaman', 'nak pinjam', 'boleh teruskan'];
 
 async function checkAutoEscalation(conversationId, message, aiResult) {
+  // Skip if already escalated
+  const conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
+  if (conversation && conversation.status === 'ESCALATED') return false;
+
+  const aiSettings = await getAiSettings();
+  const enabledTriggers = (aiSettings.ai_escalation_triggers || '').split(',');
   const reasons = [];
+  const lowerMsg = message.toLowerCase();
+
+  // Customer is pre-eligible
+  if (enabledTriggers.includes('pre_eligible') && aiResult.eligibility_status === 'PRE_ELIGIBLE') {
+    reasons.push('PRE_ELIGIBLE');
+  }
+
+  // Customer wants to follow up / proceed
+  if (enabledTriggers.includes('follow_up') && FOLLOWUP_KEYWORDS.some((kw) => lowerMsg.includes(kw))) {
+    reasons.push('USER_REQUEST');
+  }
 
   // Low confidence
-  if (aiResult.confidence < 0.75) {
+  if (enabledTriggers.includes('low_confidence') && aiResult.confidence < 0.75) {
     reasons.push('LOW_CONFIDENCE');
   }
 
   // Angry keywords
-  const lowerMsg = message.toLowerCase();
-  if (ANGRY_KEYWORDS.some((kw) => lowerMsg.includes(kw))) {
+  if (enabledTriggers.includes('angry_keywords') && ANGRY_KEYWORDS.some((kw) => lowerMsg.includes(kw))) {
     reasons.push('ANGRY_KEYWORDS');
   }
 
@@ -23,19 +42,26 @@ async function checkAutoEscalation(conversationId, message, aiResult) {
   }
 
   // Borderline eligibility
-  if (aiResult.eligibility_status === 'REQUIRES_REVIEW') {
+  if (enabledTriggers.includes('borderline') && aiResult.eligibility_status === 'REQUIRES_REVIEW') {
     reasons.push('BORDERLINE_ELIGIBILITY');
   }
 
   // User explicitly requests human
-  const humanKeywords = ['agent', 'pegawai', 'manusia', 'human', 'orang', 'cakap dengan orang'];
-  if (humanKeywords.some((kw) => lowerMsg.includes(kw))) {
+  if (enabledTriggers.includes('user_request_human') && HUMAN_KEYWORDS.some((kw) => lowerMsg.includes(kw))) {
     reasons.push('USER_REQUEST');
   }
 
-  if (reasons.length > 0) {
-    await escalate(conversationId, reasons[0], reasons.join(', '));
-    return true;
+  // AI itself decided to escalate
+  if (aiResult.escalate && reasons.length === 0) {
+    reasons.push('MANUAL');
+  }
+
+  // Deduplicate
+  const uniqueReasons = [...new Set(reasons)];
+
+  if (uniqueReasons.length > 0) {
+    const dutyAgent = await escalate(conversationId, uniqueReasons[0], uniqueReasons.join(', '));
+    return { escalated: true, dutyAgent };
   }
 
   return false;
@@ -43,6 +69,9 @@ async function checkAutoEscalation(conversationId, message, aiResult) {
 
 async function escalate(conversationId, reason, description) {
   try {
+    const { getNextAgent } = require('./dutyAgentService');
+    const dutyAgent = await getNextAgent();
+
     await prisma.conversation.update({
       where: { id: conversationId },
       data: { status: 'ESCALATED' },
@@ -57,9 +86,11 @@ async function escalate(conversationId, reason, description) {
       },
     });
 
-    logger.info(`Conversation ${conversationId} escalated: ${reason}`);
+    logger.info(`Conversation ${conversationId} escalated: ${reason}${dutyAgent ? ` → ${dutyAgent.name}` : ''}`);
+    return dutyAgent; // { name, phone } or null
   } catch (error) {
     logger.error('Escalation error:', error);
+    return null;
   }
 }
 

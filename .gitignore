@@ -3,3 +3,4 @@ node_modules/
 uploads/
 src/public/css/output.css
 prisma/migrations/
+wachat/

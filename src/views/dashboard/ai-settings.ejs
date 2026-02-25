@@ -1,0 +1,257 @@
+<% locals.pageTitle = 'AI Knowledge' %>
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">AI Knowledge</h1>
+  <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">Urus pengetahuan dan tingkah laku AI agent. Semua maklumat boleh dikemaskini tanpa perlu ubah kod.</p>
+</div>
+
+<form id="aiSettingsForm" class="max-w-4xl">
+  <!-- Tabs -->
+  <div class="flex gap-1 mb-6 bg-gray-100 dark:bg-dark-800 rounded-xl p-1 overflow-x-auto">
+    <button type="button" data-tab="identity" class="tab-btn active flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      Identiti
+    </button>
+    <button type="button" data-tab="knowledge" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Pengetahuan
+    </button>
+    <button type="button" data-tab="messages" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+      Contoh Mesej
+    </button>
+    <button type="button" data-tab="escalation" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+      Eskalasi
+    </button>
+  </div>
+
+  <!-- Tab: Identity -->
+  <div id="tab-identity" class="tab-content">
+    <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Identiti Agent</h3>
+        <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Maklumat asas pegawai AI yang berinteraksi dengan pelanggan.</p>
+      </div>
+      <div class="p-6 space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1.5">Nama Pegawai</label>
+            <input type="text" name="ai_agent_name" value="<%= settings.ai_agent_name || defaults.ai_agent_name %>" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow">
+            <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">Nama yang AI gunakan, contoh: Puan Sarah</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1.5">Nama Koperasi</label>
+            <input type="text" name="ai_koperasi_name" value="<%= settings.ai_koperasi_name || defaults.ai_koperasi_name %>" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow">
+            <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">Nama organisasi yang AI wakili</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Knowledge -->
+  <div id="tab-knowledge" class="tab-content hidden">
+    <div class="space-y-5">
+      <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Maklumat Produk & Koperasi</h3>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">AI akan rujuk maklumat ini untuk menjawab soalan dan mempertahankan koperasi.</p>
+        </div>
+        <div class="p-6">
+          <textarea name="ai_product_info" rows="6" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_product_info || defaults.ai_product_info %></textarea>
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">Masukkan semua maklumat tentang produk, syarat kelayakan, rakan kerjasama, dan maklumat koperasi. AI akan guna ini untuk semua balasan.</p>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Arahan Tambahan</h3>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Arahan khas untuk mengawal cara AI berinteraksi. Boleh kosong.</p>
+        </div>
+        <div class="p-6">
+          <textarea name="ai_custom_instructions" rows="4" placeholder="contoh: Jangan tanya lebih dari 2 soalan dalam satu mesej." class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_custom_instructions || '' %></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Messages -->
+  <div id="tab-messages" class="tab-content hidden">
+    <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Contoh Mesej</h3>
+        <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Contoh untuk panduan nada dan gaya AI. AI akan sesuaikan secara dinamik — bukan copy-paste.</p>
+      </div>
+      <div class="p-6 space-y-5">
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Greeting / Mesej Pertama</label>
+          </div>
+          <textarea name="ai_greeting_message" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_greeting_message || defaults.ai_greeting_message %></textarea>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Pelanggan SAH Kerajaan</label>
+          </div>
+          <textarea name="ai_eligible_message" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_eligible_message || defaults.ai_eligible_message %></textarea>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Tidak Layak</label>
+          </div>
+          <textarea name="ai_not_eligible_message" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_not_eligible_message || defaults.ai_not_eligible_message %></textarea>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Eskalasi ke Pegawai</label>
+          </div>
+          <textarea name="ai_escalation_message" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_escalation_message || defaults.ai_escalation_message %></textarea>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Slip Gaji Diterima</label>
+          </div>
+          <textarea name="ai_slip_received_message" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_slip_received_message || defaults.ai_slip_received_message %></textarea>
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">⚡ Ini dihantar <strong>secara tepat</strong> (bukan contoh) apabila pelanggan hantar gambar/dokumen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Escalation -->
+  <div id="tab-escalation" class="tab-content hidden">
+    <div class="space-y-5">
+      <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Trigger Eskalasi</h3>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Tandakan situasi yang perlu dieskalasi kepada pegawai manusia secara automatik.</p>
+        </div>
+        <div class="p-6">
+          <input type="hidden" name="ai_escalation_triggers" id="escalationTriggersInput" value="">
+          <% const triggers = (settings.ai_escalation_triggers || defaults.ai_escalation_triggers).split(','); %>
+          <div class="space-y-3">
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
+              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="slip_received" <%= triggers.includes('slip_received') ? 'checked' : '' %>>
+              <div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Slip gaji diterima</span>
+                <p class="text-xs text-gray-500 dark:text-dark-400">Pelanggan hantar gambar atau dokumen</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
+              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="pre_eligible" <%= triggers.includes('pre_eligible') ? 'checked' : '' %>>
+              <div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Pra-Layak disahkan</span>
+                <p class="text-xs text-gray-500 dark:text-dark-400">Pelanggan disahkan sebagai Penjawat Awam</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
+              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="user_request_human" <%= triggers.includes('user_request_human') ? 'checked' : '' %>>
+              <div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Minta pegawai manusia</span>
+                <p class="text-xs text-gray-500 dark:text-dark-400">Pelanggan minta cakap dengan orang sebenar</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
+              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="angry_keywords" <%= triggers.includes('angry_keywords') ? 'checked' : '' %>>
+              <div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Pelanggan marah</span>
+                <p class="text-xs text-gray-500 dark:text-dark-400">Kata kesat atau marah berulang kali</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
+              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="follow_up" <%= triggers.includes('follow_up') ? 'checked' : '' %>>
+              <div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Follow up</span>
+                <p class="text-xs text-gray-500 dark:text-dark-400">Pelanggan sebut "follow up", "nak teruskan", "berminat"</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
+              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="low_confidence" <%= triggers.includes('low_confidence') ? 'checked' : '' %>>
+              <div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">AI tidak yakin</span>
+                <p class="text-xs text-gray-500 dark:text-dark-400">Confidence rendah — lebih selamat serah kepada manusia</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
+              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="borderline" <%= triggers.includes('borderline') ? 'checked' : '' %>>
+              <div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Kelayakan sempadan</span>
+                <p class="text-xs text-gray-500 dark:text-dark-400">Status REQUIRES_REVIEW — perlu semakan manual</p>
+              </div>
+            </label>
+          </div>
+
+          <!-- Silence hours -->
+          <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-700">
+            <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1">Tempoh Senyap AI Selepas Eskalasi (jam)</label>
+            <p class="text-xs text-gray-500 dark:text-dark-400 mb-2">AI tidak akan balas mesej baru selepas dieskalasi, sehingga tempoh ini tamat. Selepas itu, AI akan mula balas semula.</p>
+            <input type="number" name="ai_silence_hours" value="<%= settings.ai_silence_hours || defaults.ai_silence_hours %>" min="1" max="168" class="w-32 px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <span class="text-xs text-gray-400 ml-2">jam (1-168)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Kata Kunci Sensitif</h3>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Jika mesej mengandungi kata ini, AI akan balas secara khas (bukan greeting biasa).</p>
+        </div>
+        <div class="p-6">
+          <input type="text" name="ai_bad_words" value="<%= settings.ai_bad_words || defaults.ai_bad_words %>" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow">
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">Pisahkan dengan koma. Contoh: scam, tipu, bodoh, penipu</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Button (always visible) -->
+  <div class="mt-6 flex items-center justify-between">
+    <p class="text-xs text-gray-400 dark:text-dark-500">Perubahan akan berkuat kuasa serta-merta selepas disimpan.</p>
+    <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      Simpan Perubahan
+    </button>
+  </div>
+</form>
+
+<style>
+  .tab-btn { color: rgb(107 114 128); }
+  .tab-btn.active { background: white; color: rgb(79 70 229); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .dark .tab-btn.active { background: rgb(30 30 40); color: rgb(129 140 248); }
+</style>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+  });
+});
+
+// Form submit
+document.getElementById('aiSettingsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const checked = [...document.querySelectorAll('.escalation-cb:checked')].map(cb => cb.value);
+  document.getElementById('escalationTriggersInput').value = checked.join(',');
+  const form = new FormData(e.target);
+  try {
+    const res = await fetch('/dashboard/ai-settings', { method: 'POST', body: form });
+    const result = await res.json();
+    if (result.success) { alert('Perubahan berjaya disimpan!'); location.reload(); }
+    else alert(result.error || 'Gagal menyimpan');
+  } catch (err) { alert('Error saving'); }
+});
+</script>

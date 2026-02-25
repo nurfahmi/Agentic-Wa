@@ -57,6 +57,17 @@
           <input type="text" name="waba_verify_token" value="<%= settings.waba_verify_token || '' %>" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
         </div>
       </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">App Secret</label>
+          <input type="password" name="waba_app_secret" value="<%= settings.waba_app_secret || '' %>" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+          <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">Untuk pengesahan webhook signature. Boleh didapati dari Meta App Dashboard.</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">API Version</label>
+          <input type="text" name="waba_api_version" value="<%= settings.waba_api_version || 'v21.0' %>" placeholder="v21.0" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+        </div>
+      </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Webhook URL</label>
         <div class="flex">
@@ -75,12 +86,24 @@
       <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
       OpenAI Configuration
     </h3>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">API Key</label>
-      <input type="password" name="openai_api_key" value="<%= settings.openai_api_key || '' %>" placeholder="sk-..." class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
-      <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">Model: GPT-4o (teks + OCR/vision). Jika kosong, sistem akan gunakan nilai dari .env</p>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">API Key</label>
+        <input type="password" name="openai_api_key" value="<%= settings.openai_api_key || '' %>" placeholder="sk-..." class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Model</label>
+        <select name="openai_model" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500">
+          <option value="gpt-4o" <%= (settings.openai_model || 'gpt-4o') === 'gpt-4o' ? 'selected' : '' %>>GPT-4o (Recommended)</option>
+          <option value="gpt-4o-mini" <%= settings.openai_model === 'gpt-4o-mini' ? 'selected' : '' %>>GPT-4o Mini (Faster/Cheaper)</option>
+          <option value="gpt-4-turbo" <%= settings.openai_model === 'gpt-4-turbo' ? 'selected' : '' %>>GPT-4 Turbo</option>
+          <option value="gpt-3.5-turbo" <%= settings.openai_model === 'gpt-3.5-turbo' ? 'selected' : '' %>>GPT-3.5 Turbo (Budget)</option>
+        </select>
+      </div>
     </div>
   </div>
+
+
 
   <div class="flex justify-end">
     <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">

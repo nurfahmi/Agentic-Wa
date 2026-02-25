@@ -169,6 +169,7 @@ enum EscalationReason {
   ANGRY_KEYWORDS
   OCR_FAILURE
   BORDERLINE_ELIGIBILITY
+  PRE_ELIGIBLE
   SYSTEM_ERROR
   MANUAL
 }
@@ -312,4 +313,31 @@ model AuditLog {
   @@index([createdAt])
   @@index([action])
   @@map("audit_logs")
+}
+
+model DutyAgent {
+  id              Int       @id @default(autoincrement())
+  name            String
+  phone           String
+  active          Boolean   @default(true)
+  assignmentCount Int       @default(0)
+  lastAssignedAt  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([active])
+  @@map("duty_agents")
+}
+
+model ChatExample {
+  id              Int       @id @default(autoincrement())
+  category        String
+  customerMessage String    @db.Text
+  adminReply      String    @db.Text
+  active          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+
+  @@index([category])
+  @@index([active])
+  @@map("chat_examples")
 }

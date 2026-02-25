@@ -1,20 +1,19 @@
 const axios = require('axios');
-const config = require('../config');
 const logger = require('../utils/logger');
-
-const WABA_URL = `https://graph.facebook.com/${config.waba.apiVersion}`;
+const { getWabaConfig } = require('../utils/getWabaConfig');
 
 async function sendText(to, text) {
   try {
+    const waba = await getWabaConfig();
     const res = await axios.post(
-      `${WABA_URL}/${config.waba.phoneNumberId}/messages`,
+      `https://graph.facebook.com/${waba.apiVersion}/${waba.phoneNumberId}/messages`,
       {
         messaging_product: 'whatsapp',
         to,
         type: 'text',
         text: { body: text },
       },
-      { headers: { Authorization: `Bearer ${config.waba.token}`, 'Content-Type': 'application/json' } }
+      { headers: { Authorization: `Bearer ${waba.token}`, 'Content-Type': 'application/json' } }
     );
     return res.data;
   } catch (error) {
@@ -25,8 +24,9 @@ async function sendText(to, text) {
 
 async function sendTemplate(to, templateName, languageCode = 'ms', components = []) {
   try {
+    const waba = await getWabaConfig();
     const res = await axios.post(
-      `${WABA_URL}/${config.waba.phoneNumberId}/messages`,
+      `https://graph.facebook.com/${waba.apiVersion}/${waba.phoneNumberId}/messages`,
       {
         messaging_product: 'whatsapp',
         to,
@@ -37,7 +37,7 @@ async function sendTemplate(to, templateName, languageCode = 'ms', components = 
           components,
         },
       },
-      { headers: { Authorization: `Bearer ${config.waba.token}`, 'Content-Type': 'application/json' } }
+      { headers: { Authorization: `Bearer ${waba.token}`, 'Content-Type': 'application/json' } }
     );
     return res.data;
   } catch (error) {
@@ -48,16 +48,19 @@ async function sendTemplate(to, templateName, languageCode = 'ms', components = 
 
 async function downloadMedia(mediaId) {
   try {
+    const waba = await getWabaConfig();
+    const baseUrl = `https://graph.facebook.com/${waba.apiVersion}`;
+
     // Step 1: Get media URL
-    const urlRes = await axios.get(`${WABA_URL}/${mediaId}`, {
-      headers: { Authorization: `Bearer ${config.waba.token}` },
+    const urlRes = await axios.get(`${baseUrl}/${mediaId}`, {
+      headers: { Authorization: `Bearer ${waba.token}` },
     });
     const mediaUrl = urlRes.data.url;
 
     // Step 2: Download file
     const fileRes = await axios.get(mediaUrl, {
       responseType: 'arraybuffer',
-      headers: { Authorization: `Bearer ${config.waba.token}` },
+      headers: { Authorization: `Bearer ${waba.token}` },
     });
     return { data: fileRes.data, mimeType: urlRes.data.mime_type };
   } catch (error) {
@@ -68,10 +71,11 @@ async function downloadMedia(mediaId) {
 
 async function markAsRead(messageId) {
   try {
+    const waba = await getWabaConfig();
     await axios.post(
-      `${WABA_URL}/${config.waba.phoneNumberId}/messages`,
+      `https://graph.facebook.com/${waba.apiVersion}/${waba.phoneNumberId}/messages`,
       { messaging_product: 'whatsapp', status: 'read', message_id: messageId },
-      { headers: { Authorization: `Bearer ${config.waba.token}`, 'Content-Type': 'application/json' } }
+      { headers: { Authorization: `Bearer ${waba.token}`, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     logger.warn('Mark as read error:', error.message);
