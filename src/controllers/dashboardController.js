@@ -109,28 +109,42 @@ exports.analytics = async (req, res) => {
 exports.employersPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 20;
+    const filter = req.query.filter || 'all'; // 'all', 'eligible', 'not-eligible'
+    const search = req.query.search || '';
+    const limit = 50;
     const skip = (page - 1) * limit;
-    const [employers, total] = await Promise.all([
-      prisma.governmentEmployer.findMany({ skip, take: limit, orderBy: { name: 'asc' } }),
-      prisma.governmentEmployer.count(),
+
+    const where = {};
+    if (filter === 'eligible') where.isApproved = true;
+    else if (filter === 'not-eligible') where.isApproved = false;
+    if (search) where.name = { contains: search };
+
+    const [employers, total, eligibleCount, notEligibleCount] = await Promise.all([
+      prisma.governmentEmployer.findMany({ where, skip, take: limit, orderBy: { name: 'asc' } }),
+      prisma.governmentEmployer.count({ where }),
+      prisma.governmentEmployer.count({ where: { isApproved: true } }),
+      prisma.governmentEmployer.count({ where: { isApproved: false } }),
     ]);
-    res.render('dashboard/employers', { employers, page, totalPages: Math.ceil(total / limit) });
+    res.render('dashboard/employers', { employers, page, totalPages: Math.ceil(total / limit), filter, search, eligibleCount, notEligibleCount, total });
   } catch (error) {
     console.error('Employers page error:', error);
-    res.render('dashboard/employers', { employers: [], page: 1, totalPages: 1 });
+    res.render('dashboard/employers', { employers: [], page: 1, totalPages: 1, filter: 'all', search: '', eligibleCount: 0, notEligibleCount: 0, total: 0 });
   }
 };
 
 exports.createEmployer = async (req, res) => {
   try {
-    const { name, code, ministry, category } = req.body;
+    const { name, code, ministry, category, sector, deduction, isApproved } = req.body;
+    // Check if already exists by name
+    const existing = await prisma.governmentEmployer.findFirst({ where: { name } });
+    if (existing) return res.json({ success: true, employer: existing, skipped: true });
+    
     const employer = await prisma.governmentEmployer.create({
-      data: { name, code: code || null, ministry: ministry || null, category: category || null, isApproved: true },
+      data: { name, code: code || null, ministry: ministry || null, category: category || null, sector: sector || null, deduction: deduction ? parseInt(deduction) : null, isApproved: isApproved !== undefined ? (isApproved === true || isApproved === 'true') : true },
     });
     res.json({ success: true, employer });
   } catch (error) {
-    if (error.code === 'P2002') return res.status(400).json({ error: 'Code already exists' });
+    if (error.code === 'P2002') return res.json({ success: true, skipped: true });
     console.error('Create employer error:', error);
     res.status(500).json({ error: 'Failed to create employer' });
   }
@@ -197,5 +211,24 @@ exports.createRule = async (req, res) => {
     if (error.code === 'P2002') return res.status(400).json({ error: 'Rule key already exists' });
     console.error('Create rule error:', error);
     res.status(500).json({ error: 'Failed to create rule' });
+  }
+};
+
+// Upload PDF and import employers
+exports.uploadEmployerPdf = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No PDF file uploaded' });
+
+    const { parsePdf, importEntries } = require('../services/employerImportService');
+    const isApproved = req.body.isApproved !== 'false'; // default true (eligible)
+    
+    const entries = await parsePdf(req.file.buffer);
+    if (entries.length === 0) return res.status(400).json({ error: 'No entries found in PDF' });
+
+    const result = await importEntries(entries, isApproved);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Upload employer PDF error:', error);
+    res.status(500).json({ error: 'Failed to process PDF: ' + error.message });
   }
 };

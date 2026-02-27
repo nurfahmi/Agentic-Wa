@@ -30,7 +30,10 @@ router.post('/knowledge/upload', authorizeApi('SUPERADMIN', 'ADMIN'), knowledgeC
 router.post('/knowledge/import-whatsapp', authorizeApi('SUPERADMIN', 'ADMIN'), knowledgeController.waUploadMiddleware, knowledgeController.importWhatsApp);
 
 // Government Employers API
+const multer = require('multer');
+const employerUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 }, fileFilter: (req, file, cb) => { cb(null, file.mimetype === 'application/pdf'); } });
 router.post('/employers', authorizeApi('SUPERADMIN', 'ADMIN'), dashboardController.createEmployer);
+router.post('/employers/upload-pdf', authorizeApi('SUPERADMIN', 'ADMIN'), employerUpload.single('pdf'), dashboardController.uploadEmployerPdf);
 router.delete('/employers/:id', authorizeApi('SUPERADMIN', 'ADMIN'), dashboardController.deleteEmployer);
 router.patch('/employers/:id/toggle', authorizeApi('SUPERADMIN', 'ADMIN'), dashboardController.toggleEmployer);
 

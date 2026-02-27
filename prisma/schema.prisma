@@ -279,6 +279,8 @@ model GovernmentEmployer {
   code         String?  @unique
   ministry     String?
   category     String?
+  sector       String?
+  deduction    Int?
   isApproved   Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
