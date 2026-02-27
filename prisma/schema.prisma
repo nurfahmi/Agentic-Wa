@@ -276,7 +276,7 @@ model KoperasiRule {
 model GovernmentEmployer {
   id           Int      @id @default(autoincrement())
   name         String
-  code         String?  @unique
+  code         String?
   ministry     String?
   category     String?
   sector       String?

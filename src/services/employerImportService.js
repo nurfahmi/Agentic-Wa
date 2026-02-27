@@ -87,7 +87,7 @@ async function parsePdf(buffer) {
       name = name.replace(/^\d+\s*/, '');
       const sector = match[2];
       const deduction = parseInt(match[3]);
-      if (name.length > 2) {
+      if (name.length > 2 && name.length <= 191) {
         entries.push({ name, sector, deduction });
       }
     }
