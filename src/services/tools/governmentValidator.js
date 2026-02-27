@@ -7,10 +7,9 @@ async function validate({ employer_name }) {
 
     const searchTerm = employer_name.trim();
 
-    // 1. Try direct contains match (case-insensitive via mode)
+    // 1. Try direct contains match
     let employers = await prisma.governmentEmployer.findMany({
       where: {
-        isApproved: true,
         OR: [
           { name: { contains: searchTerm } },
           { ministry: { contains: searchTerm } },
@@ -19,13 +18,12 @@ async function validate({ employer_name }) {
       },
     });
 
-    // 2. If no match, try word-by-word search (handles "kem pendidikan" → "Kementerian Pendidikan")
+    // 2. If no match, try word-by-word search
     if (employers.length === 0) {
       const words = searchTerm.split(/\s+/).filter(w => w.length >= 3);
       if (words.length > 0) {
         employers = await prisma.governmentEmployer.findMany({
           where: {
-            isApproved: true,
             AND: words.map(word => ({
               OR: [
                 { name: { contains: word } },
@@ -39,18 +37,31 @@ async function validate({ employer_name }) {
 
     if (employers.length > 0) {
       const matched = employers[0];
+      
+      if (!matched.isApproved) {
+        return {
+          is_valid: false,
+          employer: matched.name,
+          code: matched.code,
+          sector: matched.sector,
+          category: matched.category,
+          reason: `Employer "${matched.name}" ditemui tetapi TIDAK LAYAK (Not Eligible)`,
+        };
+      }
+
       return {
         is_valid: true,
         employer: matched.name,
-        ministry: matched.ministry,
+        code: matched.code,
+        sector: matched.sector,
         category: matched.category,
-        reason: `Matched approved employer: ${matched.name}`,
+        reason: `Majikan layak: ${matched.name} (${matched.sector || 'N/A'})`,
       };
     }
 
     return {
       is_valid: false,
-      reason: `Employer "${employer_name}" not found in approved Penjawat Awam list`,
+      reason: `Majikan "${employer_name}" tidak ditemui dalam senarai Penjawat Awam`,
     };
   } catch (error) {
     logger.error('Government validator error:', error);
