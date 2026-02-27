@@ -326,10 +326,18 @@ function demoChat() {
 
     handleResponse(data) {
       if (data.success) {
-        this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: data.reply, isAiGenerated: true, type: 'TEXT', timestamp: new Date() });
-        this.lastDebug = data.debug;
-        if (data.debug.eligibility_status) this.eligibility = data.debug.eligibility_status;
-        if (data.debug.escalate) this.convStatus = 'ESCALATED';
+        if (data.silent) {
+          // AI is silent — show system message
+          const reason = data.debug?.reason || 'AI diam.';
+          this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: `🔇 ${reason}`, isAiGenerated: false, type: 'TEXT', timestamp: new Date() });
+          if (data.manualHandling) this.convStatus = 'AGENT_HANDLING';
+          this.lastDebug = data.debug || null;
+        } else {
+          this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: data.reply, isAiGenerated: true, type: 'TEXT', timestamp: new Date() });
+          this.lastDebug = data.debug;
+          if (data.debug.eligibility_status) this.eligibility = data.debug.eligibility_status;
+          if (data.debug.escalate) this.convStatus = 'ESCALATED';
+        }
       } else {
         this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: `⚠️ ${data.error || data.detail || 'Error'}`, isAiGenerated: false, type: 'TEXT', timestamp: new Date() });
       }

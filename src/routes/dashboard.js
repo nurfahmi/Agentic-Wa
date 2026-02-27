@@ -48,6 +48,11 @@ router.post('/duty-agents/:id/toggle', authorize('SUPERADMIN', 'ADMIN'), dutyAge
 router.delete('/duty-agents/:id', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.deleteAgent);
 router.post('/duty-agents/reset', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.resetCounts);
 
+// Agent Tiers - Admin+ only
+router.post('/duty-agents/tiers', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.createTier);
+router.put('/duty-agents/tiers/:id', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.updateTier);
+router.delete('/duty-agents/tiers/:id', authorize('SUPERADMIN', 'ADMIN'), dutyAgentController.deleteTier);
+
 // Chat Examples - Admin+ only
 const chatExampleController = require('../controllers/chatExampleController');
 router.get('/chat-examples', authorize('SUPERADMIN', 'ADMIN'), chatExampleController.listExamples);

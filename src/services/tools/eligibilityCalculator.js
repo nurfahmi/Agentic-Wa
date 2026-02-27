@@ -19,7 +19,30 @@ async function loadRules() {
   }
 }
 
-async function calculate({ is_penjawat_awam, monthly_salary, age, employer }) {
+async function checkBlacklist({ name, ic_number, phone }) {
+  try {
+    const conditions = [];
+    if (name) conditions.push({ name: { contains: name, mode: 'insensitive' } });
+    if (ic_number) conditions.push({ icNumber: ic_number });
+    if (phone) conditions.push({ phone: phone });
+
+    if (conditions.length === 0) return null;
+
+    const entry = await prisma.blacklist.findFirst({
+      where: {
+        isActive: true,
+        OR: conditions,
+      },
+    });
+
+    return entry;
+  } catch (error) {
+    logger.warn('Blacklist check error:', error.message);
+    return null;
+  }
+}
+
+async function calculate({ is_penjawat_awam, monthly_salary, age, employer, name, ic_number, phone }) {
   try {
     const rules = await loadRules();
     const minSalary = parseFloat(rules.min_salary || '1800');
@@ -28,6 +51,18 @@ async function calculate({ is_penjawat_awam, monthly_salary, age, employer }) {
 
     let score = 0;
     const reasons = [];
+
+    // Rule 0: Blacklist check
+    const blacklisted = await checkBlacklist({ name, ic_number, phone });
+    if (blacklisted) {
+      return {
+        eligible: false,
+        score: 0,
+        reason: `Disenarai hitam: ${blacklisted.reason || 'Tiada sebab dinyatakan'}`,
+        status: 'NOT_ELIGIBLE',
+        isBlacklisted: true,
+      };
+    }
 
     // Rule 1: Must be Penjawat Awam
     if (mustBePenjawatAwam) {
@@ -56,13 +91,8 @@ async function calculate({ is_penjawat_awam, monthly_salary, age, employer }) {
       reasons.push(`Umur ${age} melebihi had ${maxAge} tahun`);
     }
 
-    // Rule 4: Not blacklisted
-    const isBlacklisted = false; // TODO: Check blacklist table
-    if (!isBlacklisted) {
-      score += 10;
-    } else {
-      reasons.push('Disenarai hitam');
-    }
+    // Rule 4: Not blacklisted (already checked above)
+    score += 10;
 
     const eligible = score >= 65 && reasons.length === 0;
 
@@ -71,6 +101,7 @@ async function calculate({ is_penjawat_awam, monthly_salary, age, employer }) {
       score: Math.min(score, 100),
       reason: eligible ? 'Pra-Layak untuk pembiayaan' : reasons.join('; '),
       status: eligible ? 'PRE_ELIGIBLE' : 'NOT_ELIGIBLE',
+      isBlacklisted: false,
     };
   } catch (error) {
     logger.error('Eligibility calculator error:', error);

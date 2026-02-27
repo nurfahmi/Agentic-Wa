@@ -315,17 +315,38 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model AgentTier {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  weight    Int      @default(1)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agents DutyAgent[]
+
+  @@map("agent_tiers")
+}
+
 model DutyAgent {
   id              Int       @id @default(autoincrement())
   name            String
   phone           String
   active          Boolean   @default(true)
+  tierId          Int?
+  shiftStart      String?   // "HH:mm" format, e.g. "09:00"
+  shiftEnd        String?   // "HH:mm" format, e.g. "18:00"
   assignmentCount Int       @default(0)
+  todayCount      Int       @default(0)
+  lastCountDate   DateTime? // date of last todayCount tracking
   lastAssignedAt  DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  tier AgentTier? @relation(fields: [tierId], references: [id])
+
   @@index([active])
+  @@index([tierId])
   @@map("duty_agents")
 }
 
@@ -340,4 +361,20 @@ model ChatExample {
   @@index([category])
   @@index([active])
   @@map("chat_examples")
+}
+
+model Blacklist {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  icNumber  String?  @unique
+  phone     String?
+  reason    String?  @db.Text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([icNumber])
+  @@index([phone])
+  @@index([name])
+  @@map("blacklist")
 }

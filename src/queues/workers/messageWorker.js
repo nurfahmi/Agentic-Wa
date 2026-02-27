@@ -1,7 +1,7 @@
 const { Worker } = require('bullmq');
 const config = require('../../config');
 const orchestrator = require('../../services/ai/orchestrator');
-const whatsappService = require('../../services/whatsappService');
+const whatsappService = require('../../services/waAdapter');
 const escalationService = require('../../services/escalationService');
 const prisma = require('../../config/database');
 const logger = require('../../utils/logger');
@@ -12,6 +12,18 @@ const connection = {
   password: config.redis.password || undefined,
 };
 
+/**
+ * Check if message matches any manual handling keywords.
+ * Supports both newline-separated and comma-separated formats.
+ */
+function matchesManualKeywords(message, keywords) {
+  if (!keywords) return false;
+  const keywordList = keywords.split(/[\n,]/).map(k => k.trim().toLowerCase()).filter(Boolean);
+  if (keywordList.length === 0) return false;
+  const lowerMsg = message.toLowerCase();
+  return keywordList.some(kw => lowerMsg.includes(kw));
+}
+
 let worker;
 try {
   worker = new Worker('messages', async (job) => {
@@ -19,22 +31,40 @@ try {
     logger.info(`Processing message for conversation ${conversationId}`);
 
     try {
-      // Check if escalated within silence window — AI stays silent
       const { getAiSettings } = require('../../utils/getAiSettings');
+      const aiSettings = await getAiSettings();
+
+      // Check if conversation is already escalated within silence window
       const conv = await prisma.conversation.findUnique({
         where: { id: conversationId },
         include: { escalations: { orderBy: { createdAt: 'desc' }, take: 1 } },
       });
+
       if (conv && conv.status === 'ESCALATED' && conv.escalations.length > 0) {
-        const aiSettings = await getAiSettings();
         const silenceHours = parseInt(aiSettings.ai_silence_hours) || 24;
         const hoursSince = (Date.now() - new Date(conv.escalations[0].createdAt).getTime()) / (1000 * 60 * 60);
         if (hoursSince < silenceHours) {
           logger.info(`Conversation ${conversationId} escalated ${Math.round(hoursSince)}h ago, AI silent (${silenceHours}h window)`);
           return;
         }
-        // After 24h, resume AI
+        // After silence window, resume AI
         await prisma.conversation.update({ where: { id: conversationId }, data: { status: 'AI_HANDLING' } });
+      }
+
+      // Check if conversation is in AGENT_HANDLING — AI stays silent
+      if (conv && conv.status === 'AGENT_HANDLING') {
+        logger.info(`Conversation ${conversationId} is agent-handled, AI silent`);
+        return;
+      }
+
+      // Check manual keywords — if matched, flag for manual handling and skip AI
+      if (matchesManualKeywords(messageContent, aiSettings.ai_manual_keywords)) {
+        await prisma.conversation.update({
+          where: { id: conversationId },
+          data: { lastMessageAt: new Date(), status: 'AGENT_HANDLING', metadata: { needsManualReply: true, manualTriggeredAt: new Date().toISOString(), triggerMessage: messageContent } },
+        });
+        logger.info(`Conversation ${conversationId} flagged for MANUAL handling (keyword match). AI silent.`);
+        return;
       }
 
       // Run through AI orchestrator

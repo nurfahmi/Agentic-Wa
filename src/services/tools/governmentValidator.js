@@ -5,17 +5,37 @@ async function validate({ employer_name }) {
   try {
     if (!employer_name) return { is_valid: false, reason: 'No employer name provided' };
 
-    // Search in approved government employers list
-    const employers = await prisma.governmentEmployer.findMany({
+    const searchTerm = employer_name.trim();
+
+    // 1. Try direct contains match (case-insensitive via mode)
+    let employers = await prisma.governmentEmployer.findMany({
       where: {
         isApproved: true,
         OR: [
-          { name: { contains: employer_name } },
-          { ministry: { contains: employer_name } },
-          { code: employer_name },
+          { name: { contains: searchTerm, mode: 'insensitive' } },
+          { ministry: { contains: searchTerm, mode: 'insensitive' } },
+          { code: { equals: searchTerm, mode: 'insensitive' } },
         ],
       },
     });
+
+    // 2. If no match, try word-by-word search (handles "kem pendidikan" → "Kementerian Pendidikan")
+    if (employers.length === 0) {
+      const words = searchTerm.split(/\s+/).filter(w => w.length >= 3);
+      if (words.length > 0) {
+        employers = await prisma.governmentEmployer.findMany({
+          where: {
+            isApproved: true,
+            AND: words.map(word => ({
+              OR: [
+                { name: { contains: word, mode: 'insensitive' } },
+                { ministry: { contains: word, mode: 'insensitive' } },
+              ],
+            })),
+          },
+        });
+      }
+    }
 
     if (employers.length > 0) {
       const matched = employers[0];

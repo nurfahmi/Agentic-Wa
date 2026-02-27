@@ -24,6 +24,10 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
       Eskalasi
     </button>
+    <button type="button" data-tab="manual" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      Manual Reply
+    </button>
   </div>
 
   <!-- Tab: Identity -->
@@ -211,8 +215,66 @@
           <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">Pisahkan dengan koma. Contoh: scam, tipu, bodoh, penipu</p>
         </div>
       </div>
+
     </div>
   </div>
+
+  <!-- Tab: Manual Reply -->
+  <div id="tab-manual" class="tab-content hidden">
+    <div class="bg-white dark:bg-dark-800 rounded-2xl border border-amber-200 dark:border-amber-500/30 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/5">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <h3 class="text-sm font-semibold text-amber-800 dark:text-amber-300">Kata Kunci / Ayat Manual Reply</h3>
+        </div>
+        <p class="mt-0.5 text-xs text-amber-600 dark:text-amber-400/70">Jika mesej pelanggan mengandungi mana-mana kata kunci atau ayat di bawah, AI akan <strong>SENYAP sepenuhnya</strong> dan chat ditandakan untuk balasan manual oleh pegawai. Notifikasi akan muncul di dashboard.</p>
+      </div>
+      <div class="p-6">
+        <input type="hidden" name="ai_manual_keywords" id="manualKeywordsInput" value="">
+
+        <!-- Tambah button -->
+        <div class="flex justify-end mb-4">
+          <button type="button" onclick="showKeywordModal()" class="px-4 py-2.5 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition-colors flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Tambah
+          </button>
+        </div>
+
+        <!-- Keywords table -->
+        <div class="border border-gray-200 dark:border-dark-600 rounded-xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-dark-700/50">
+                <th class="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-dark-400 w-12">#</th>
+                <th class="text-left px-4 py-2.5 font-semibold text-gray-600 dark:text-dark-400">Kata Kunci / Ayat</th>
+                <th class="text-right px-4 py-2.5 font-semibold text-gray-600 dark:text-dark-400 w-20">Padam</th>
+              </tr>
+            </thead>
+            <tbody id="keywordsTableBody" class="divide-y divide-gray-200 dark:divide-dark-600">
+            </tbody>
+          </table>
+          <div id="emptyKeywords" class="hidden px-4 py-8 text-center text-sm text-gray-400 dark:text-dark-500">
+            Tiada kata kunci. Klik "Tambah" untuk mula.
+          </div>
+        </div>
+
+        <p class="mt-3 text-xs text-gray-400 dark:text-dark-500">💡 Tip: Boleh masukkan kata kunci pendek ("urgent") atau ayat panjang ("saya nak buat bayaran manual"). Padanan adalah case-insensitive.</p>
+      </div>
+    </div>
+  </div>
+
+<!-- Add Keywords Modal -->
+<div id="keywordModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-xl p-6 w-full max-w-lg mx-4">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Tambah Kata Kunci</h3>
+    <p class="text-xs text-gray-500 dark:text-dark-400 mb-4">Masukkan satu kata kunci atau ayat per baris. Semua baris akan ditambah sekaligus.</p>
+    <textarea id="bulkKeywordsInput" rows="8" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono" placeholder="urgent&#10;saya nak bayar&#10;complaint bayaran&#10;masalah besar dengan akaun"></textarea>
+    <div class="flex justify-end gap-3 mt-4">
+      <button type="button" onclick="closeKeywordModal()" class="px-4 py-2 rounded-xl border border-gray-300 dark:border-dark-600 text-sm font-medium text-gray-700 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-700">Batal</button>
+      <button type="button" onclick="addBulkKeywords()" class="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600">Tambah Semua</button>
+    </div>
+  </div>
+</div>
 
   <!-- Save Button (always visible) -->
   <div class="mt-6 flex items-center justify-between">
@@ -241,17 +303,97 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
+// ─── MANUAL KEYWORDS TABLE ───
+let manualKeywords = [];
+
+// Load existing keywords (stored as newline-separated)
+const existingKeywords = <%- JSON.stringify(settings.ai_manual_keywords || '') %>;
+if (existingKeywords.trim()) {
+  // Support both comma-separated (old format) and newline-separated (new format)
+  manualKeywords = existingKeywords.split(/[\n,]/).map(k => k.trim()).filter(Boolean);
+}
+
+function renderKeywordsTable() {
+  const tbody = document.getElementById('keywordsTableBody');
+  const empty = document.getElementById('emptyKeywords');
+
+  if (manualKeywords.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  empty.classList.add('hidden');
+  tbody.innerHTML = manualKeywords.map((kw, i) => `
+    <tr class="hover:bg-gray-50 dark:hover:bg-dark-700/30 transition-colors">
+      <td class="px-4 py-2.5 text-gray-400 dark:text-dark-500">${i + 1}</td>
+      <td class="px-4 py-2.5 text-gray-900 dark:text-white">${kw}</td>
+      <td class="px-4 py-2.5 text-right">
+        <button type="button" onclick="removeKeyword(${i})" class="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title="Padam">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function showKeywordModal() {
+  document.getElementById('bulkKeywordsInput').value = '';
+  document.getElementById('keywordModal').classList.remove('hidden');
+  document.getElementById('keywordModal').classList.add('flex');
+  setTimeout(() => document.getElementById('bulkKeywordsInput').focus(), 100);
+}
+
+function closeKeywordModal() {
+  document.getElementById('keywordModal').classList.add('hidden');
+  document.getElementById('keywordModal').classList.remove('flex');
+}
+
+function addBulkKeywords() {
+  const input = document.getElementById('bulkKeywordsInput').value;
+  const lines = input.split('\n').map(l => l.trim()).filter(Boolean);
+  let added = 0;
+  lines.forEach(line => {
+    if (!manualKeywords.some(k => k.toLowerCase() === line.toLowerCase())) {
+      manualKeywords.push(line);
+      added++;
+    }
+  });
+  closeKeywordModal();
+  renderKeywordsTable();
+  if (added > 0) alert(`${added} kata kunci ditambah.`);
+  else if (lines.length > 0) alert('Semua kata kunci sudah wujud.');
+}
+
+function removeKeyword(index) {
+  manualKeywords.splice(index, 1);
+  renderKeywordsTable();
+}
+
+// Initial render
+renderKeywordsTable();
+
 // Form submit
 document.getElementById('aiSettingsForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  // Sync escalation triggers
   const checked = [...document.querySelectorAll('.escalation-cb:checked')].map(cb => cb.value);
   document.getElementById('escalationTriggersInput').value = checked.join(',');
-  const form = new FormData(e.target);
+  // Sync manual keywords (newline-separated)
+  document.getElementById('manualKeywordsInput').value = manualKeywords.join('\n');
+  // Send as urlencoded (Express can parse this, not multipart FormData)
+  const formData = new FormData(e.target);
+  const params = new URLSearchParams(formData);
   try {
-    const res = await fetch('/dashboard/ai-settings', { method: 'POST', body: form });
+    const res = await fetch('/dashboard/ai-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
     const result = await res.json();
     if (result.success) { alert('Perubahan berjaya disimpan!'); location.reload(); }
     else alert(result.error || 'Gagal menyimpan');
   } catch (err) { alert('Error saving'); }
 });
 </script>
+

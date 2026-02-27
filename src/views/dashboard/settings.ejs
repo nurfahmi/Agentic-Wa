@@ -36,13 +36,35 @@
     </div>
   </div>
 
-  <!-- WABA Settings -->
-  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm p-6">
+  <!-- WhatsApp Settings -->
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm p-6"
+       x-data="{ waType: '<%= settings.wa_type || 'official' %>' }">
     <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
       <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
-      WhatsApp Business API
+      WhatsApp Integration
     </h3>
-    <div class="space-y-4">
+
+    <!-- Type Selector -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2">Jenis WhatsApp</label>
+      <div class="flex gap-3">
+        <label class="flex-1 cursor-pointer">
+          <input type="radio" name="wa_type" value="official" x-model="waType" class="sr-only peer">
+          <div class="px-4 py-3 rounded-xl border-2 text-center text-sm font-medium transition-all peer-checked:border-green-500 peer-checked:bg-green-50 dark:peer-checked:bg-green-500/10 peer-checked:text-green-700 dark:peer-checked:text-green-400 border-gray-200 dark:border-dark-600 text-gray-500 dark:text-dark-400">
+            🏢 Official (WABA)
+          </div>
+        </label>
+        <label class="flex-1 cursor-pointer">
+          <input type="radio" name="wa_type" value="unofficial" x-model="waType" class="sr-only peer">
+          <div class="px-4 py-3 rounded-xl border-2 text-center text-sm font-medium transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-500/10 peer-checked:text-blue-700 dark:peer-checked:text-blue-400 border-gray-200 dark:border-dark-600 text-gray-500 dark:text-dark-400">
+            🔓 Unofficial (WA Gateway)
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Official WABA Fields -->
+    <div x-show="waType === 'official'" x-transition class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">WABA Token</label>
         <input type="password" name="waba_token" value="<%= settings.waba_token || '' %>" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
@@ -61,7 +83,6 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">App Secret</label>
           <input type="password" name="waba_app_secret" value="<%= settings.waba_app_secret || '' %>" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
-          <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">Untuk pengesahan webhook signature. Boleh didapati dari Meta App Dashboard.</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">API Version</label>
@@ -69,13 +90,42 @@
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Webhook URL</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Webhook URL (set in Meta Dashboard)</label>
         <div class="flex">
           <input type="text" name="webhook_url" value="<%= settings.webhook_url || '' %>" placeholder="https://yourdomain.com/webhook" class="flex-1 px-3 py-2.5 rounded-l-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
           <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value)" class="px-4 rounded-r-xl border border-l-0 border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-gray-500 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Unofficial WA Gateway Fields -->
+    <div x-show="waType === 'unofficial'" x-transition class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">WA Gateway Base URL</label>
+        <input type="text" name="wa_unofficial_base_url" value="<%= settings.wa_unofficial_base_url || '' %>" placeholder="https://wa.example.com" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+        <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">URL asas WA Gateway anda, contoh: https://wa.muhibbahkoperasi.com</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Session ID</label>
+        <input type="text" name="wa_unofficial_session_id" value="<%= settings.wa_unofficial_session_id || '' %>" placeholder="device-1" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+        <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">ID sesi peranti anda di WA Gateway</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">API Key</label>
+        <input type="password" name="wa_unofficial_api_key" value="<%= settings.wa_unofficial_api_key || '' %>" placeholder="your-device-api-key" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+        <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">API key peranti anda (boleh didapati dari halaman Devices di WA Gateway)</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Webhook URL (set di WA Gateway)</label>
+        <div class="flex">
+          <input type="text" readonly value="<%= (settings.webhook_url || 'https://yourdomain.com') + '/webhook/unofficial' %>" class="flex-1 px-3 py-2.5 rounded-l-xl border border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-sm text-gray-500 dark:text-dark-400 font-mono">
+          <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.innerHTML='✓'; setTimeout(()=>this.innerHTML='📋', 1500)" class="px-4 rounded-r-xl border border-l-0 border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-gray-500 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors text-sm">
+            📋
+          </button>
+        </div>
+        <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">Salin URL ini dan set sebagai webhook di WA Gateway Dashboard anda</p>
       </div>
     </div>
   </div>
@@ -103,7 +153,20 @@
     </div>
   </div>
 
-
+  <!-- Webhook / Integration -->
+  <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm p-6">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      Integrasi & Webhook
+    </h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Escalation Webhook URL (Make.com / Zapier / n8n)</label>
+        <input type="text" name="escalation_webhook_url" value="<%= settings.escalation_webhook_url || '' %>" placeholder="https://hook.us2.make.com/abc123xyz456" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+        <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">Webhook akan dihantar apabila chat dieskalasi. Data: customer_phone, customer_name, staff_name, staff_phone, reason, timestamp.</p>
+      </div>
+    </div>
+  </div>
 
   <div class="flex justify-end">
     <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 shadow-lg shadow-primary-500/25 transition-all">

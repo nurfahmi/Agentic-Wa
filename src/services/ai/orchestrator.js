@@ -32,10 +32,11 @@ async function processMessage(conversationId, userMessage) {
     const aiSettings = await getAiSettings();
 
     // 1. Get conversation context
+    const contextLimit = parseInt(aiSettings.ai_context_messages) || 20;
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
       include: {
-        messages: { orderBy: { timestamp: 'asc' }, take: 8 },
+        messages: { orderBy: { timestamp: 'asc' }, take: contextLimit },
         documents: true,
         eligibilityResults: { orderBy: { createdAt: 'desc' }, take: 1 },
       },

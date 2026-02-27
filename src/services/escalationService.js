@@ -1,10 +1,31 @@
 const prisma = require('../config/database');
 const logger = require('../utils/logger');
 const { getAiSettings } = require('../utils/getAiSettings');
+const axios = require('axios');
 
 const ANGRY_KEYWORDS = ['marah', 'bodoh', 'stupid', 'useless', 'scam', 'tipu', 'tidak berguna', 'complaint', 'aduan', 'saman', 'babi', 'sial'];
 const HUMAN_KEYWORDS = ['agent', 'pegawai', 'manusia', 'human', 'orang', 'cakap dengan orang'];
 const FOLLOWUP_KEYWORDS = ['follow up', 'nak teruskan', 'berminat', 'nak apply', 'nak mohon', 'bagaimana nak mohon', 'saya setuju', 'proceed', 'seterusnya', 'langkah seterusnya', 'nak buat pinjaman', 'nak pinjam', 'boleh teruskan'];
+
+/**
+ * Fire webhook to external service (Make.com / Zapier / n8n)
+ */
+async function fireWebhook(data) {
+  try {
+    // Read from DB first, fallback to .env
+    const setting = await prisma.siteSetting.findUnique({ where: { key: 'escalation_webhook_url' } });
+    const webhookUrl = setting?.value || process.env.ESCALATION_WEBHOOK_URL;
+    if (!webhookUrl) return;
+
+    await axios.post(webhookUrl, data, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 10000,
+    });
+    logger.info(`Webhook fired: ${data.event} for ${data.customer_phone}`);
+  } catch (error) {
+    logger.warn(`Webhook failed: ${error.message}`);
+  }
+}
 
 async function checkAutoEscalation(conversationId, message, aiResult) {
   // Skip if already escalated
@@ -72,9 +93,19 @@ async function escalate(conversationId, reason, description) {
     const { getNextAgent } = require('./dutyAgentService');
     const dutyAgent = await getNextAgent();
 
+    // Get conversation for customer info
+    const conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
+
     await prisma.conversation.update({
       where: { id: conversationId },
-      data: { status: 'ESCALATED' },
+      data: {
+        status: 'ESCALATED',
+        metadata: {
+          ...(conversation?.metadata && typeof conversation.metadata === 'object' ? conversation.metadata : {}),
+          dutyAgentName: dutyAgent?.name || null,
+          dutyAgentPhone: dutyAgent?.phone || null,
+        },
+      },
     });
 
     await prisma.escalation.create({
@@ -87,6 +118,17 @@ async function escalate(conversationId, reason, description) {
     });
 
     logger.info(`Conversation ${conversationId} escalated: ${reason}${dutyAgent ? ` → ${dutyAgent.name}` : ''}`);
+
+    // Fire webhook (async, don't await to avoid blocking)
+    fireWebhook({
+      event: 'escalation',
+      customer_phone: conversation?.customerPhone || '',
+      staff_name: dutyAgent?.name || '',
+      staff_phone: dutyAgent?.phone || '',
+      conversation_id: conversationId,
+      timestamp: new Date().toISOString(),
+    });
+
     return dutyAgent; // { name, phone } or null
   } catch (error) {
     logger.error('Escalation error:', error);

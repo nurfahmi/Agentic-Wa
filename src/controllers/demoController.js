@@ -63,13 +63,19 @@ exports.startSession = async (req, res) => {
       data: { status: 'CLOSED' },
     });
 
+    // Generate unique dummy Malaysian phone number
+    const prefix = ['11', '12', '13', '14', '15', '16', '17', '18', '19'][Math.floor(Math.random() * 9)];
+    const num = String(Math.floor(Math.random() * 90000000) + 10000000);
+    const dummyPhone = `60${prefix}${num}`;
+
     const conversation = await prisma.conversation.create({
       data: {
         waId: `demo-${req.user.id}-${Date.now()}`,
-        customerPhone: `demo-${req.user.id}`,
+        customerPhone: dummyPhone,
         customerName: `Demo - ${req.user.name}`,
         status: 'AI_HANDLING',
         eligibility: 'PENDING',
+        lastMessageAt: new Date(),
         metadata: { isDemo: true },
       },
     });
@@ -106,10 +112,12 @@ exports.sendMessage = async (req, res) => {
       },
     });
 
-    // If escalated within silence window, AI stays silent
+    // Load AI settings once (same as messageWorker)
+    const { getAiSettings } = require('../utils/getAiSettings');
+    const aiSettings = await getAiSettings();
+
+    // 1. If escalated within silence window, AI stays silent
     if (conversation.status === 'ESCALATED' && conversation.escalations.length > 0) {
-      const { getAiSettings } = require('../utils/getAiSettings');
-      const aiSettings = await getAiSettings();
       const silenceHours = parseInt(aiSettings.ai_silence_hours) || 24;
       const escalatedAt = conversation.escalations[0].createdAt;
       const hoursSince = (Date.now() - new Date(escalatedAt).getTime()) / (1000 * 60 * 60);
@@ -121,11 +129,37 @@ exports.sendMessage = async (req, res) => {
           debug: { reason: `Telah dieskalasi ${Math.round(hoursSince)}j lalu. AI diam sehingga ${silenceHours}j.` },
         });
       }
-      // After 24 hours, resume AI handling
+      // After silence window, resume AI handling
       await prisma.conversation.update({ where: { id: conversation.id }, data: { status: 'AI_HANDLING' } });
     }
 
-    // Run through the full AI orchestrator pipeline
+    // 2. Check if conversation is already being handled by agent
+    if (conversation.status === 'AGENT_HANDLING') {
+      return res.json({
+        success: true,
+        reply: null,
+        silent: true,
+        debug: { reason: 'Perbualan sedang dikendalikan oleh pegawai. AI diam.' },
+      });
+    }
+
+    // 3. Check manual keywords — if matched, flag for manual handling and skip AI
+    const manualKws = (aiSettings.ai_manual_keywords || '').split(/[\n,]/).map(k => k.trim().toLowerCase()).filter(Boolean);
+    if (manualKws.length > 0 && manualKws.some(kw => message.toLowerCase().includes(kw))) {
+      await prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { lastMessageAt: new Date(), status: 'AGENT_HANDLING', metadata: { isDemo: true, needsManualReply: true, manualTriggeredAt: new Date().toISOString(), triggerMessage: message } },
+      });
+      return res.json({
+        success: true,
+        reply: null,
+        silent: true,
+        manualHandling: true,
+        debug: { reason: 'Kata kunci manual dikesan. AI diam — menunggu balasan pegawai.' },
+      });
+    }
+
+    // 4. Run through the full AI orchestrator pipeline
     const aiResult = await orchestrator.processMessage(conversation.id, message);
 
     // Check escalation and get duty agent

@@ -31,8 +31,10 @@ exports.settingsPage = async (req, res) => {
 exports.updateSettings = async (req, res) => {
   try {
     const fields = [
-      'site_name', 'default_theme', 'webhook_url',
+      'site_name', 'default_theme', 'webhook_url', 'escalation_webhook_url',
+      'wa_type', // 'official' or 'unofficial'
       'waba_token', 'waba_phone_number_id', 'waba_verify_token', 'waba_app_secret', 'waba_api_version',
+      'wa_unofficial_base_url', 'wa_unofficial_session_id', 'wa_unofficial_api_key',
       'openai_api_key', 'openai_model',
       'ai_agent_name', 'ai_koperasi_name', 'ai_greeting_message',
       'ai_eligible_message', 'ai_not_eligible_message', 'ai_escalation_message',
@@ -70,6 +72,10 @@ exports.updateSettings = async (req, res) => {
     clearOpenAI();
     clearWaba();
     clearAi();
+    const { clearCache: clearWaAdapter } = require('../services/waAdapter');
+    const { clearCache: clearWaUnofficial } = require('../services/waUnofficialService');
+    clearWaAdapter();
+    clearWaUnofficial();
     res.json({ success: true });
   } catch (error) {
     console.error('Update settings error:', error);

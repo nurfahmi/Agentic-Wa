@@ -5,8 +5,6 @@ const userController = require('../controllers/userController');
 const chatController = require('../controllers/chatController');
 const knowledgeController = require('../controllers/knowledgeController');
 const dashboardController = require('../controllers/dashboardController');
-
-router.use(apiLimiter);
 router.use(authenticateApi);
 
 // Users API
@@ -19,6 +17,9 @@ router.get('/conversations/:id/messages', chatController.getMessages);
 router.post('/conversations/:id/reply', chatController.sendReply);
 router.post('/conversations/:id/assign', authorizeApi('SUPERADMIN', 'ADMIN', 'MASTER_AGENT'), chatController.assignAgent);
 router.post('/conversations/:id/escalate', chatController.escalateConversation);
+router.post('/conversations/:id/handback', chatController.handbackToAi);
+router.post('/conversations/:id/mark-read', chatController.markRead);
+router.get('/notifications/count', chatController.getNotifications);
 
 // Knowledge Base API
 router.post('/knowledge', authorizeApi('SUPERADMIN', 'ADMIN'), knowledgeController.createEntry);

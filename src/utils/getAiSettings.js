@@ -16,6 +16,8 @@ const DEFAULTS = {
   ai_escalation_triggers: 'slip_received,pre_eligible,user_request_human,angry_keywords,follow_up',
   ai_silence_hours: '24',
   ai_bad_words: 'scam,scammer,tipu,penipuan,bodoh,stupid,babi,sial',
+  ai_context_messages: '20',
+  ai_manual_keywords: '',
 };
 
 async function getAiSettings() {

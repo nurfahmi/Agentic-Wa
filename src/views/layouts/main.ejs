@@ -41,7 +41,7 @@
       <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <% const navItems = [
           { href: '/dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', label: 'Dashboard' },
-          { href: '/dashboard/chat', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', label: 'Chat' },
+          { href: '/dashboard/chat', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', label: 'Chat', badge: true },
           { href: '/dashboard/analytics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', label: 'Analytics' },
           { href: '/dashboard/demo', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', label: 'AI Demo' },
         ]; %>
@@ -50,7 +50,10 @@
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="<%= item.icon %>"/>
             </svg>
-            <%= item.label %>
+            <span class="flex-1"><%= item.label %></span>
+            <% if (item.badge) { %>
+              <span id="chatBadge" class="hidden min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center animate-pulse"></span>
+            <% } %>
           </a>
         <% }); %>
 
@@ -133,5 +136,63 @@
       </main>
     </div>
   </div>
+
+  <!-- Notification Polling -->
+  <script>
+  (function() {
+    let lastTotal = -1; // -1 = first load, don't play sound
+    let lastManual = -1;
+
+    // WhatsApp-style notification sound using Web Audio API
+    function playNotifSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(830, ctx.currentTime);
+        osc.frequency.setValueAtTime(990, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.4);
+      } catch {}
+    }
+
+    async function pollNotifications() {
+      try {
+        const res = await fetch('/api/notifications/count');
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById('chatBadge');
+        if (data.manual > 0) {
+          if (badge) { badge.textContent = data.manual; badge.classList.remove('hidden'); badge.classList.add('flex'); }
+          // Sound + notification only when NEW manual reply chats appear (not on first load, not for escalations)
+          if (data.manual > lastManual && lastManual >= 0) {
+            playNotifSound();
+            if (Notification.permission === 'granted') {
+              new Notification('Perlu Balas Manual', { body: `${data.manual} chat perlu balasan manual`, icon: '/favicon.ico' });
+            }
+          }
+        } else {
+          if (badge) { badge.classList.add('hidden'); badge.classList.remove('flex'); }
+        }
+        lastTotal = data.total;
+        lastManual = data.manual;
+      } catch {}
+    }
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+    pollNotifications();
+    setInterval(pollNotifications, 10000);
+    // Pause when tab hidden
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) pollNotifications();
+    });
+  })();
+  </script>
 </body>
 </html>

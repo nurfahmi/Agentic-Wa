@@ -66,6 +66,15 @@ async function processIncomingMessage(msg, contact) {
     const waId = msg.from;
     const customerName = contact.profile?.name || null;
 
+    // Deduplicate: skip if this message was already processed
+    if (msg.id) {
+      const existing = await prisma.message.findUnique({ where: { waMessageId: msg.id } });
+      if (existing) {
+        logger.debug(`Duplicate webhook message ${msg.id}, skipping`);
+        return;
+      }
+    }
+
     // Find or create conversation
     let conversation = await prisma.conversation.findUnique({ where: { waId } });
     if (!conversation) {
@@ -109,7 +118,7 @@ async function processIncomingMessage(msg, contact) {
       const triggers = (aiSettings.ai_escalation_triggers || '').split(',');
 
       if (triggers.includes('slip_received')) {
-        const whatsappService = require('../services/whatsappService');
+        const whatsappService = require('../services/waAdapter');
         const escalationService = require('../services/escalationService');
 
         // Escalate and get assigned duty agent

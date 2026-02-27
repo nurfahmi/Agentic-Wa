@@ -24,8 +24,13 @@
         <button @click="selectConversation(<%= conv.id %>)" 
                 :class="selectedConversation === <%= conv.id %> ? 'bg-primary-50 dark:bg-primary-500/10 border-l-2 border-primary-500' : 'hover:bg-gray-50 dark:hover:bg-dark-800 border-l-2 border-transparent'"
                 class="w-full flex items-start gap-3 px-4 py-3 text-left transition-colors">
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-            <%= conv.customerName ? conv.customerName.charAt(0).toUpperCase() : '?' %>
+          <div class="relative flex-shrink-0">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-sm font-bold">
+              <%= conv.customerName ? conv.customerName.charAt(0).toUpperCase() : '?' %>
+            </div>
+            <% if (conv.metadata?.needsManualReply) { %>
+              <span id="chatUnread-<%= conv.id %>" class="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 border-2 border-white dark:border-dark-900 animate-pulse"></span>
+            <% } %>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
@@ -34,19 +39,13 @@
             </div>
             <p class="text-xs text-gray-500 dark:text-dark-400 truncate mt-0.5"><%= conv.messages[0]?.content || 'Tiada mesej' %></p>
             <div class="flex items-center gap-2 mt-1.5">
-              <!-- Eligibility Badge -->
-              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium
-                <% if (conv.eligibility === 'PRE_ELIGIBLE') { %>bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400
-                <% } else if (conv.eligibility === 'NOT_ELIGIBLE') { %>bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400
-                <% } else { %>bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400<% } %>
-              "><%= conv.eligibility %></span>
               <!-- Status -->
               <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium
-                <% if (conv.status === 'ESCALATED') { %>bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400
-                <% } else if (conv.status === 'AGENT_HANDLING') { %>bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400
+                <% if (conv.metadata?.needsManualReply) { %>bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400
+                <% } else if (conv.status === 'ESCALATED') { %>bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400
                 <% } else if (conv.status === 'CLOSED') { %>bg-gray-100 text-gray-600 dark:bg-dark-600 dark:text-dark-400
                 <% } else { %>bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400<% } %>
-              "><%= conv.status.replace('_', ' ') %></span>
+              "><%= conv.metadata?.needsManualReply ? 'Perlu Balas' : (conv.status === 'AGENT_HANDLING' ? 'Manual Reply' : conv.status.replace('_', ' ')) %></span>
             </div>
           </div>
         </button>
@@ -88,13 +87,11 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <!-- Agent Assignment -->
-            <select @change="assignAgent($event.target.value)" class="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-gray-700 dark:text-dark-300">
-              <option value="">Assign Agent</option>
-              <% agents.forEach(a => { %>
-                <option value="<%= a.id %>"><%= a.name %></option>
-              <% }); %>
-            </select>
+            <!-- Assigned Agent Label -->
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-dark-800 text-xs">
+              <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              <span class="text-gray-500 dark:text-dark-400" x-text="conversationData?.metadata?.dutyAgentName || conversationData?.assignedAgent?.name || 'Tiada Pegawai'"></span>
+            </div>
             <!-- Escalate -->
             <button @click="escalateChat()" class="p-2 rounded-lg text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors" title="Escalate">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
@@ -146,11 +143,27 @@ function chatApp() {
 
     async selectConversation(id) {
       this.selectedConversation = id;
+      // Hide the unread badge for this chat
+      const badge = document.getElementById('chatUnread-' + id);
+      if (badge) badge.remove();
       try {
         const res = await fetch(`/api/conversations/${id}/messages`);
         const data = await res.json();
         this.conversationData = data;
         this.messages = data.messages || [];
+        // Mark as read (clear needsManualReply)
+        if (data.status === 'AGENT_HANDLING') {
+          fetch(`/api/conversations/${id}/mark-read`, { method: 'POST' }).then(() => {
+            // Re-poll notifications to update sidebar badge immediately
+            if (typeof pollNotifications === 'function') pollNotifications();
+            const badge = document.getElementById('chatBadge');
+            if (badge) {
+              const current = parseInt(badge.textContent) || 0;
+              if (current <= 1) { badge.classList.add('hidden'); badge.classList.remove('flex'); }
+              else { badge.textContent = current - 1; }
+            }
+          }).catch(() => {});
+        }
         this.$nextTick(() => {
           const container = document.getElementById('messagesContainer');
           if (container) container.scrollTop = container.scrollHeight;
