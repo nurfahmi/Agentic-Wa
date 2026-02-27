@@ -15,13 +15,20 @@ exports.receive = async (req, res) => {
     const body = req.body;
     logger.info('Unofficial webhook received:', JSON.stringify(body).substring(0, 500));
     
-    if (!body || body.event !== 'message') {
+    if (!body || !['message', 'messages.upsert'].includes(body.event)) {
       logger.info(`Unofficial webhook skipped: event=${body?.event}, has body=${!!body}`);
       return;
     }
 
-    const data = body.data;
-    if (!data || !data.key) return;
+    let data = body.data;
+    // messages.upsert may send array of messages
+    if (Array.isArray(data)) {
+      data = data[0];
+    }
+    if (!data || !data.key) {
+      logger.info('Unofficial webhook: no data or key found', JSON.stringify(data).substring(0, 300));
+      return;
+    }
 
     // Skip outgoing messages
     if (data.key.fromMe) return;
