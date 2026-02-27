@@ -13,7 +13,12 @@ exports.receive = async (req, res) => {
     res.sendStatus(200); // Acknowledge immediately
 
     const body = req.body;
-    if (!body || body.event !== 'message') return;
+    logger.info('Unofficial webhook received:', JSON.stringify(body).substring(0, 500));
+    
+    if (!body || body.event !== 'message') {
+      logger.info(`Unofficial webhook skipped: event=${body?.event}, has body=${!!body}`);
+      return;
+    }
 
     const data = body.data;
     if (!data || !data.key) return;
