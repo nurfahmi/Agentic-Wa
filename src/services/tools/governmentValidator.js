@@ -12,9 +12,9 @@ async function validate({ employer_name }) {
       where: {
         isApproved: true,
         OR: [
-          { name: { contains: searchTerm, mode: 'insensitive' } },
-          { ministry: { contains: searchTerm, mode: 'insensitive' } },
-          { code: { equals: searchTerm, mode: 'insensitive' } },
+          { name: { contains: searchTerm } },
+          { ministry: { contains: searchTerm } },
+          { code: { equals: searchTerm } },
         ],
       },
     });
@@ -28,8 +28,8 @@ async function validate({ employer_name }) {
             isApproved: true,
             AND: words.map(word => ({
               OR: [
-                { name: { contains: word, mode: 'insensitive' } },
-                { ministry: { contains: word, mode: 'insensitive' } },
+                { name: { contains: word } },
+                { ministry: { contains: word } },
               ],
             })),
           },

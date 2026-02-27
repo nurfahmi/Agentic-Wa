@@ -52,9 +52,16 @@ async function markAsRead(messageId) {
   const type = await getWaType();
   return getService(type).markAsRead(messageId);
 }
+async function sendPresence(to, composing = true) {
+  const type = await getWaType();
+  if (type === 'unofficial') {
+    return getService(type).sendPresence(to, composing);
+  }
+  // Official WABA doesn't support typing indicators
+}
 
 function clearCache() {
   waTypeCache = { value: null, ts: 0 };
 }
 
-module.exports = { sendText, sendTemplate, downloadMedia, markAsRead, getWaType, clearCache };
+module.exports = { sendText, sendTemplate, downloadMedia, markAsRead, sendPresence, getWaType, clearCache };

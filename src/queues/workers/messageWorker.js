@@ -67,6 +67,11 @@ try {
         return;
       }
 
+      // Send typing indicator before AI processing
+      if (conv) {
+        await whatsappService.sendPresence(conv.customerPhone, true);
+      }
+
       // Run through AI orchestrator
       const aiResult = await orchestrator.processMessage(conversationId, messageContent);
 

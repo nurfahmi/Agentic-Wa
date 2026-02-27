@@ -101,12 +101,48 @@ async function sendDocument(to, docUrl, fileName, mimeType = 'application/pdf') 
   }
 }
 
-// markAsRead is not supported in unofficial API — no-op
-async function markAsRead() {}
+/**
+ * Send read receipt (blue ticks) for a message
+ */
+async function sendReadReceipt(to, messageId) {
+  try {
+    const cfg = await getUnofficialConfig();
+    const jid = to.replace(/^\+/, '') + '@s.whatsapp.net';
+    await axios.post(
+      `${cfg.baseUrl}/api/sessions/${cfg.sessionId}/send-message`,
+      { jid, message: { read: true }, readMessages: [{ remoteJid: jid, id: messageId }] },
+      { headers: { 'Content-Type': 'application/json', ...(cfg.apiKey ? { 'x-api-key': cfg.apiKey } : {}) }, timeout: 5000 }
+    );
+  } catch (error) {
+    logger.warn('WA read receipt error (non-fatal):', error.message);
+  }
+}
+
+/**
+ * Send typing/composing presence
+ */
+async function sendPresence(to, composing = true) {
+  try {
+    const cfg = await getUnofficialConfig();
+    const jid = to.replace(/^\+/, '') + '@s.whatsapp.net';
+    await axios.post(
+      `${cfg.baseUrl}/api/sessions/${cfg.sessionId}/send-message`,
+      { jid, message: { presenceUpdate: composing ? 'composing' : 'paused' } },
+      { headers: { 'Content-Type': 'application/json', ...(cfg.apiKey ? { 'x-api-key': cfg.apiKey } : {}) }, timeout: 5000 }
+    );
+  } catch (error) {
+    logger.warn('WA presence error (non-fatal):', error.message);
+  }
+}
+
+// markAsRead uses sendReadReceipt
+async function markAsRead(messageId, to) {
+  if (messageId && to) await sendReadReceipt(to, messageId);
+}
 
 // downloadMedia is not applicable for unofficial — incoming media comes via webhook URL
 async function downloadMedia() {
   return null;
 }
 
-module.exports = { sendText, sendImage, sendDocument, markAsRead, downloadMedia, getUnofficialConfig, clearCache };
+module.exports = { sendText, sendImage, sendDocument, markAsRead, sendPresence, sendReadReceipt, downloadMedia, getUnofficialConfig, clearCache };
