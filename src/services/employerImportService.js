@@ -1,4 +1,3 @@
-const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
 const prisma = require('../config/database');
 const logger = require('../utils/logger');
 
@@ -62,6 +61,7 @@ function detectCode(name) {
  * Parse PDF and extract employer entries using pdfjs-dist
  */
 async function parsePdf(buffer) {
+  const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
   const uint8 = new Uint8Array(buffer);
   const doc = await pdfjsLib.getDocument({ data: uint8 }).promise;
   
