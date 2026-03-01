@@ -33,7 +33,7 @@ router.get('/rules', authorize('SUPERADMIN', 'ADMIN'), dashboardController.rules
 // Settings - Superadmin only
 router.get('/settings', authorize('SUPERADMIN'), settingsController.settingsPage);
 router.post('/settings', authorize('SUPERADMIN'), settingsController.uploadMiddleware, settingsController.updateSettings);
-router.post('/change-password', authorize('SUPERADMIN'), require('../controllers/authController').changePassword);
+router.post('/change-password', require('../controllers/authController').changePassword);
 
 // AI Settings - Admin+ only
 const aiSettingsController = require('../controllers/aiSettingsController');
