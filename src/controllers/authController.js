@@ -4,13 +4,18 @@ const prisma = require('../config/database');
 const config = require('../config');
 const { auditLog } = require('../middlewares/auditLog');
 
-exports.loginPage = (req, res) => {
+exports.loginPage = async (req, res) => {
   const token = req.cookies.token;
   if (token) {
     try {
       jwt.verify(token, config.jwtSecret);
       return res.redirect('/dashboard');
     } catch (e) { /* invalid token, show login */ }
+  }
+  // If no users exist, redirect to setup page
+  const userCount = await prisma.user.count();
+  if (userCount === 0 && req.app.locals.setupToken) {
+    return res.redirect(`/auth/setup/${req.app.locals.setupToken}`);
   }
   res.render('auth/login', { layout: false, error: null });
 };
