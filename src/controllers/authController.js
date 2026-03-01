@@ -94,3 +94,23 @@ exports.setup = async (req, res) => {
     res.render('auth/setup', { layout: false, token, error: 'Something went wrong', siteName: config.site.name });
   }
 };
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
+      return res.json({ error: 'Kata laluan baru mestilah sekurang-kurangnya 6 aksara' });
+    }
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      return res.json({ error: 'Kata laluan semasa tidak betul' });
+    }
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({ where: { id: req.user.id }, data: { password: hashed } });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.json({ error: 'Gagal menukar kata laluan' });
+  }
+};
