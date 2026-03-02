@@ -115,7 +115,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Webhook URL (set di WA Gateway)</label>
         <div class="flex">
-          <input type="text" readonly value="<%= (settings.webhook_url || 'https://muhibbahkoperasi.com') + '/webhook' %>" class="flex-1 px-3 py-2.5 rounded-l-xl border border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-sm text-gray-500 dark:text-dark-400 font-mono">
+          <input type="text" readonly value="<%= settings.webhook_url || 'https://muhibbahkoperasi.com/webhook' %>" class="flex-1 px-3 py-2.5 rounded-l-xl border border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-sm text-gray-500 dark:text-dark-400 font-mono">
           <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.innerHTML='✓'; setTimeout(()=>this.innerHTML='📋', 1500)" class="px-4 rounded-r-xl border border-l-0 border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-gray-500 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors text-sm">
             📋
           </button>
