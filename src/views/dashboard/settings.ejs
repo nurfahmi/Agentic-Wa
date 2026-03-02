@@ -92,7 +92,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Webhook URL (set in Meta Dashboard)</label>
         <div class="flex">
-          <input type="text" name="webhook_url" value="<%= settings.webhook_url || '' %>" placeholder="https://yourdomain.com/webhook" class="flex-1 px-3 py-2.5 rounded-l-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+          <input type="text" name="webhook_url" value="<%= settings.webhook_url || 'https://muhibbahkoperasi.com/webhook' %>" class="flex-1 px-3 py-2.5 rounded-l-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
           <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value)" class="px-4 rounded-r-xl border border-l-0 border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-gray-500 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
           </button>
@@ -104,7 +104,7 @@
     <div x-show="waType === 'unofficial'" x-transition class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">WA Gateway Base URL</label>
-        <input type="text" name="wa_unofficial_base_url" value="<%= settings.wa_unofficial_base_url || '' %>" placeholder="https://wa.example.com" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
+        <input type="text" name="wa_unofficial_base_url" value="<%= settings.wa_unofficial_base_url || '' %>" placeholder="https://wa.muhibbahkoperasi.com" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono">
         <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">URL asas WA Gateway anda, contoh: https://wa.muhibbahkoperasi.com</p>
       </div>
       <div>
@@ -120,7 +120,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Webhook URL (set di WA Gateway)</label>
         <div class="flex">
-          <input type="text" readonly value="<%= (settings.webhook_url || 'https://yourdomain.com') + '/webhook/unofficial' %>" class="flex-1 px-3 py-2.5 rounded-l-xl border border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-sm text-gray-500 dark:text-dark-400 font-mono">
+          <input type="text" readonly value="<%= (settings.webhook_url || 'https://muhibbahkoperasi.com') + '/webhook/unofficial' %>" class="flex-1 px-3 py-2.5 rounded-l-xl border border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-sm text-gray-500 dark:text-dark-400 font-mono">
           <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.innerHTML='✓'; setTimeout(()=>this.innerHTML='📋', 1500)" class="px-4 rounded-r-xl border border-l-0 border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-600 text-gray-500 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-500 transition-colors text-sm">
             📋
           </button>
