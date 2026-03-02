@@ -200,7 +200,10 @@ async function processUnofficialMessage(body) {
     if (data.key.fromMe) return;
 
     const remoteJid = data.key.remoteJid || '';
-    const waId = remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
+    // Skip status broadcasts and group messages
+    if (remoteJid === 'status@broadcast' || remoteJid.endsWith('@g.us')) return;
+
+    const waId = remoteJid.replace('@s.whatsapp.net', '');
     if (!waId) return;
 
     const customerName = body.senderInfo?.contactName || data.pushName || null;
