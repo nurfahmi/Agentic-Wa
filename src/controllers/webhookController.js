@@ -59,10 +59,15 @@ exports.receive = async (req, res) => {
         }
       }
     } else if (body.event && ['message', 'messages.upsert'].includes(body.event)) {
-      // === Unofficial WA Gateway ===
+      // === Unofficial WA Gateway — new messages ===
       await processUnofficialMessage(body);
+    } else if (body.event) {
+      // Known WA Gateway events we don't need to process (delivery receipts, presence, etc.)
+      // Silently ignore
+    } else if (body.object || body.entry) {
+      // Known Meta events we don't process
     } else {
-      logger.debug('Webhook received unknown payload format');
+      logger.debug(`Webhook received unrecognized payload: ${JSON.stringify(body).substring(0, 200)}`);
     }
   } catch (error) {
     logger.error('Webhook receive error:', error);
