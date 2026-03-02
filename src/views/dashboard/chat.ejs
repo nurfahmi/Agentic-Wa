@@ -37,7 +37,8 @@
               <p class="text-sm font-semibold text-gray-900 dark:text-white truncate"><%= conv.customerName || conv.customerPhone %></p>
               <span class="text-[10px] text-gray-400 dark:text-dark-500 flex-shrink-0"><%= conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('ms-MY', {hour:'2-digit',minute:'2-digit'}) : '' %></span>
             </div>
-            <p class="text-xs text-gray-500 dark:text-dark-400 truncate mt-0.5"><%= conv.messages[0]?.content || 'Tiada mesej' %></p>
+            <% const lastMsg = conv.messages[0]; %>
+            <p class="text-xs text-gray-500 dark:text-dark-400 truncate mt-0.5"><%= lastMsg ? (lastMsg.type === 'IMAGE' ? '📷 Gambar' : lastMsg.type === 'DOCUMENT' ? '📄 Dokumen' : lastMsg.type === 'AUDIO' ? '🎵 Audio' : lastMsg.type === 'VIDEO' ? '🎬 Video' : lastMsg.type === 'LOCATION' ? '📍 Lokasi' : lastMsg.content) : 'Tiada mesej' %></p>
             <div class="flex items-center gap-2 mt-1.5">
               <!-- Status -->
               <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium
@@ -107,9 +108,42 @@
                 ? 'bg-primary-500 text-white rounded-2xl rounded-br-md max-w-[75%]' 
                 : 'bg-white dark:bg-dark-800 text-gray-900 dark:text-white rounded-2xl rounded-bl-md max-w-[75%] border border-gray-200 dark:border-dark-700'"
                 class="px-4 py-2.5 shadow-sm">
-                <p class="text-sm leading-relaxed whitespace-pre-wrap" x-text="msg.content"></p>
+                <!-- Image -->
+                <template x-if="msg.type === 'IMAGE' && msg.mediaUrl">
+                  <div>
+                    <img :src="msg.mediaUrl" class="rounded-lg max-h-64 w-auto cursor-pointer" @click="window.open(msg.mediaUrl, '_blank')" loading="lazy">
+                    <p x-show="msg.content && msg.content !== '[Gambar]' && msg.content !== '[Image]'" class="text-sm mt-1.5" x-text="msg.content"></p>
+                  </div>
+                </template>
+                <!-- Document -->
+                <template x-if="msg.type === 'DOCUMENT'">
+                  <a :href="msg.mediaUrl || '#'" target="_blank" class="flex items-center gap-2 py-1">
+                    <svg class="w-8 h-8 flex-shrink-0 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <span class="text-sm underline" x-text="msg.content || 'Document'"></span>
+                  </a>
+                </template>
+                <!-- Audio -->
+                <template x-if="msg.type === 'AUDIO' && msg.mediaUrl">
+                  <audio :src="msg.mediaUrl" controls class="max-w-full"></audio>
+                </template>
+                <!-- Video -->
+                <template x-if="msg.type === 'VIDEO' && msg.mediaUrl">
+                  <div>
+                    <video :src="msg.mediaUrl" controls class="rounded-lg max-h-64 w-auto"></video>
+                    <p x-show="msg.content && msg.content !== '[Video]'" class="text-sm mt-1.5" x-text="msg.content"></p>
+                  </div>
+                </template>
+                <!-- Location -->
+                <template x-if="msg.type === 'LOCATION'">
+                  <p class="text-sm" x-text="msg.content"></p>
+                </template>
+                <!-- Text / fallback -->
+                <template x-if="!['IMAGE','DOCUMENT','AUDIO','VIDEO','LOCATION'].includes(msg.type) || (!msg.mediaUrl && ['IMAGE','AUDIO','VIDEO'].includes(msg.type))">
+                  <p class="text-sm leading-relaxed whitespace-pre-wrap" x-text="msg.content"></p>
+                </template>
                 <div class="flex items-center gap-1.5 mt-1" :class="msg.direction === 'OUTBOUND' ? 'justify-end' : ''">
                   <template x-if="msg.isAiGenerated"><span class="text-[10px] opacity-60">🤖 AI</span></template>
+                  <template x-if="msg.type && msg.type !== 'TEXT'"><span class="text-[10px] opacity-60" x-text="msg.type"></span></template>
                   <span class="text-[10px] opacity-50" x-text="new Date(msg.timestamp).toLocaleTimeString('ms-MY', {hour:'2-digit',minute:'2-digit'})"></span>
                 </div>
               </div>
@@ -140,10 +174,33 @@ function chatApp() {
     messages: [],
     newMessage: '',
     searchQuery: '',
+    pollTimer: null,
+
+    init() {
+      // Start polling every 5 seconds
+      this.pollTimer = setInterval(() => this.pollMessages(), 5000);
+      // Cleanup on page leave
+      window.addEventListener('beforeunload', () => clearInterval(this.pollTimer));
+    },
+
+    async pollMessages() {
+      if (!this.selectedConversation) return;
+      try {
+        const res = await fetch(`/api/conversations/${this.selectedConversation}/messages`);
+        const data = await res.json();
+        if (data.messages && data.messages.length > this.messages.length) {
+          this.messages = data.messages;
+          this.conversationData = data;
+          this.$nextTick(() => {
+            const container = document.getElementById('messagesContainer');
+            if (container) container.scrollTop = container.scrollHeight;
+          });
+        }
+      } catch (err) { /* silent */ }
+    },
 
     async selectConversation(id) {
       this.selectedConversation = id;
-      // Hide the unread badge for this chat
       const badge = document.getElementById('chatUnread-' + id);
       if (badge) badge.remove();
       try {
@@ -151,10 +208,8 @@ function chatApp() {
         const data = await res.json();
         this.conversationData = data;
         this.messages = data.messages || [];
-        // Mark as read (clear needsManualReply)
         if (data.status === 'AGENT_HANDLING') {
           fetch(`/api/conversations/${id}/mark-read`, { method: 'POST' }).then(() => {
-            // Re-poll notifications to update sidebar badge immediately
             if (typeof pollNotifications === 'function') pollNotifications();
             const badge = document.getElementById('chatBadge');
             if (badge) {
@@ -175,7 +230,7 @@ function chatApp() {
       if (!this.newMessage.trim() || !this.selectedConversation) return;
       const content = this.newMessage;
       this.newMessage = '';
-      this.messages.push({ id: Date.now(), direction: 'OUTBOUND', content, timestamp: new Date(), isAiGenerated: false });
+      this.messages.push({ id: Date.now(), direction: 'OUTBOUND', type: 'TEXT', content, timestamp: new Date(), isAiGenerated: false });
       try {
         await fetch(`/api/conversations/${this.selectedConversation}/reply`, {
           method: 'POST',

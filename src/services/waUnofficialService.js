@@ -8,14 +8,13 @@ const CACHE_TTL = 60000;
 async function getUnofficialConfig() {
   if (Date.now() - configCache.ts < CACHE_TTL && configCache.data) return configCache.data;
 
-  const keys = ['wa_unofficial_base_url', 'wa_unofficial_session_id', 'wa_unofficial_api_key'];
+  const keys = ['wa_unofficial_base_url', 'wa_unofficial_api_key'];
   const rows = await prisma.siteSetting.findMany({ where: { key: { in: keys } } });
   const map = {};
   rows.forEach(r => (map[r.key] = r.value));
 
   const data = {
     baseUrl: (map.wa_unofficial_base_url || '').replace(/\/$/, ''),
-    sessionId: map.wa_unofficial_session_id || '',
     apiKey: map.wa_unofficial_api_key || '',
   };
   configCache = { data, ts: Date.now() };
@@ -28,7 +27,7 @@ function clearCache() {
 
 /**
  * Send a text message via WA Gateway
- * POST /api/sessions/:sessionId/send-message
+ * POST /api/send-message
  */
 async function sendText(to, text) {
   try {
@@ -36,7 +35,7 @@ async function sendText(to, text) {
     // Convert phone to JID format: 6281234567890@s.whatsapp.net
     const jid = to.replace(/^\+/, '') + '@s.whatsapp.net';
     const res = await axios.post(
-      `${cfg.baseUrl}/api/sessions/${cfg.sessionId}/send-message`,
+      `${cfg.baseUrl}/api/send-message`,
       {
         jid,
         message: { text },
@@ -58,7 +57,7 @@ async function sendImage(to, imageUrl, caption = '') {
     const cfg = await getUnofficialConfig();
     const jid = to.replace(/^\+/, '') + '@s.whatsapp.net';
     const res = await axios.post(
-      `${cfg.baseUrl}/api/sessions/${cfg.sessionId}/send-message`,
+      `${cfg.baseUrl}/api/send-message`,
       {
         jid,
         message: {
@@ -83,7 +82,7 @@ async function sendDocument(to, docUrl, fileName, mimeType = 'application/pdf') 
     const cfg = await getUnofficialConfig();
     const jid = to.replace(/^\+/, '') + '@s.whatsapp.net';
     const res = await axios.post(
-      `${cfg.baseUrl}/api/sessions/${cfg.sessionId}/send-message`,
+      `${cfg.baseUrl}/api/send-message`,
       {
         jid,
         message: {
@@ -109,7 +108,7 @@ async function sendReadReceipt(to, messageId) {
     const cfg = await getUnofficialConfig();
     const jid = to.replace(/^\+/, '') + '@s.whatsapp.net';
     await axios.post(
-      `${cfg.baseUrl}/api/sessions/${cfg.sessionId}/send-message`,
+      `${cfg.baseUrl}/api/send-message`,
       { jid, message: { read: true }, readMessages: [{ remoteJid: jid, id: messageId }] },
       { headers: { 'Content-Type': 'application/json', ...(cfg.apiKey ? { 'x-api-key': cfg.apiKey } : {}) }, timeout: 5000 }
     );
@@ -126,7 +125,7 @@ async function sendPresence(to, composing = true) {
     const cfg = await getUnofficialConfig();
     const jid = to.replace(/^\+/, '') + '@s.whatsapp.net';
     await axios.post(
-      `${cfg.baseUrl}/api/sessions/${cfg.sessionId}/send-message`,
+      `${cfg.baseUrl}/api/send-message`,
       { jid, message: { presenceUpdate: composing ? 'composing' : 'paused' } },
       { headers: { 'Content-Type': 'application/json', ...(cfg.apiKey ? { 'x-api-key': cfg.apiKey } : {}) }, timeout: 5000 }
     );
