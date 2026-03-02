@@ -32,41 +32,109 @@ exports.verifySignature = (req, res, buf) => {
   }
 };
 
-// POST /webhook - Receive messages
+// POST /webhook - Receive messages (auto-detects Official WABA vs Unofficial WA Gateway)
 exports.receive = async (req, res) => {
   try {
     res.sendStatus(200); // Acknowledge immediately
 
     const body = req.body;
-    if (!body.object || body.object !== 'whatsapp_business_account') return;
 
-    const entries = body.entry || [];
-    for (const entry of entries) {
-      const changes = entry.changes || [];
-      for (const change of changes) {
-        if (change.field !== 'messages') continue;
-        const value = change.value;
-        const messages = value.messages || [];
-        const contacts = value.contacts || [];
+    // Detect payload format: Official WABA vs Unofficial WA Gateway
+    if (body.object === 'whatsapp_business_account') {
+      // === Official WABA (Meta) ===
+      const entries = body.entry || [];
+      for (const entry of entries) {
+        const changes = entry.changes || [];
+        for (const change of changes) {
+          if (change.field !== 'messages') continue;
+          const value = change.value;
+          const messages = value.messages || [];
+          const contacts = value.contacts || [];
 
-        for (let i = 0; i < messages.length; i++) {
-          const msg = messages[i];
-          const contact = contacts[i] || {};
-          await processIncomingMessage(msg, contact);
+          for (let i = 0; i < messages.length; i++) {
+            const msg = messages[i];
+            const contact = contacts[i] || {};
+            await processIncomingMessage(msg, contact);
+          }
         }
       }
+    } else if (body.event && ['message', 'messages.upsert'].includes(body.event)) {
+      // === Unofficial WA Gateway ===
+      await processUnofficialMessage(body);
+    } else {
+      logger.debug('Webhook received unknown payload format');
     }
   } catch (error) {
     logger.error('Webhook receive error:', error);
   }
 };
 
+// ──────────────────────────────────────────────
+// Shared: process after normalize + store
+// ──────────────────────────────────────────────
+
+async function handleAfterStore(conversation, normalized) {
+  // If customer sends salary slip (image/document) → check if auto-escalation enabled
+  if (conversation.status === 'AI_HANDLING' && (normalized.type === 'IMAGE' || normalized.type === 'DOCUMENT')) {
+    const { getAiSettings } = require('../utils/getAiSettings');
+    const aiSettings = await getAiSettings();
+    const triggers = (aiSettings.ai_escalation_triggers || '').split(',');
+
+    if (triggers.includes('slip_received')) {
+      const whatsappService = require('../services/waAdapter');
+      const escalationService = require('../services/escalationService');
+
+      // Escalate and get assigned duty agent
+      const dutyAgent = await escalationService.escalate(conversation.id, 'MANUAL', 'Pelanggan hantar slip gaji — perlu semakan manual');
+
+      // Build reply with agent info
+      let replyText = aiSettings.ai_slip_received_message || 'Terima kasih, slip gaji telah diterima. Pegawai kami akan hubungi tuan/puan untuk semakan kelayakan. Terima kasih 🧕';
+      if (dutyAgent) {
+        replyText += `\n\nPegawai bertugas: ${dutyAgent.name}\nNo. telefon: ${dutyAgent.phone}`;
+      }
+
+      await whatsappService.sendText(conversation.customerPhone, replyText);
+
+      // Store outbound reply
+      await prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          direction: 'OUTBOUND',
+          type: 'TEXT',
+          content: replyText,
+          isAiGenerated: true,
+        },
+      });
+
+      logger.info(`Conversation ${conversation.id} escalated: salary slip received → ${dutyAgent?.name || 'no agent available'}`);
+      return; // don't queue for AI
+    }
+  }
+
+  // Text messages → AI processing
+  if (conversation.status === 'AI_HANDLING' && normalized.content) {
+    await messageQueue.add('process', {
+      conversationId: conversation.id,
+      messageContent: normalized.content,
+      messageType: normalized.type,
+    }, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 2000 },
+    });
+    logger.info(`Queued AI processing for conversation ${conversation.id}`);
+  }
+}
+
+// ──────────────────────────────────────────────
+// Official WABA message processing
+// ──────────────────────────────────────────────
+
 async function processIncomingMessage(msg, contact) {
   try {
     const waId = msg.from;
     const customerName = contact.profile?.name || null;
 
-    // Deduplicate: skip if this message was already processed
+    // Deduplicate
     if (msg.id) {
       const existing = await prisma.message.findUnique({ where: { waMessageId: msg.id } });
       if (existing) {
@@ -79,19 +147,12 @@ async function processIncomingMessage(msg, contact) {
     let conversation = await prisma.conversation.findUnique({ where: { waId } });
     if (!conversation) {
       conversation = await prisma.conversation.create({
-        data: {
-          waId,
-          customerPhone: waId,
-          customerName,
-          status: 'AI_HANDLING',
-        },
+        data: { waId, customerPhone: waId, customerName, status: 'AI_HANDLING' },
       });
     }
 
-    // Normalize message
     const normalized = normalizeMessage(msg);
 
-    // Store message
     await prisma.message.create({
       data: {
         conversationId: conversation.id,
@@ -105,64 +166,92 @@ async function processIncomingMessage(msg, contact) {
       },
     });
 
-    // Update conversation
     await prisma.conversation.update({
       where: { id: conversation.id },
       data: { lastMessageAt: new Date(), customerName: customerName || conversation.customerName },
     });
 
-    // If customer sends salary slip (image/document) → check if auto-escalation enabled
-    if (conversation.status === 'AI_HANDLING' && (normalized.type === 'IMAGE' || normalized.type === 'DOCUMENT')) {
-      const { getAiSettings } = require('../utils/getAiSettings');
-      const aiSettings = await getAiSettings();
-      const triggers = (aiSettings.ai_escalation_triggers || '').split(',');
-
-      if (triggers.includes('slip_received')) {
-        const whatsappService = require('../services/waAdapter');
-        const escalationService = require('../services/escalationService');
-
-        // Escalate and get assigned duty agent
-        const dutyAgent = await escalationService.escalate(conversation.id, 'MANUAL', 'Pelanggan hantar slip gaji — perlu semakan manual');
-
-        // Build reply with agent info
-        let replyText = aiSettings.ai_slip_received_message || 'Terima kasih, slip gaji telah diterima. Pegawai kami akan hubungi tuan/puan untuk semakan kelayakan. Terima kasih 🧕';
-        if (dutyAgent) {
-          replyText += `\n\nPegawai bertugas: ${dutyAgent.name}\nNo. telefon: ${dutyAgent.phone}`;
-        }
-
-        await whatsappService.sendText(conversation.customerPhone, replyText);
-
-        // Store outbound reply
-        await prisma.message.create({
-          data: {
-            conversationId: conversation.id,
-            direction: 'OUTBOUND',
-            type: 'TEXT',
-            content: replyText,
-            isAiGenerated: true,
-          },
-        });
-
-        logger.info(`Conversation ${conversation.id} escalated: salary slip received → ${dutyAgent?.name || 'no agent available'}`);
-      }
-    }
-    // Text messages → AI processing
-    else if (conversation.status === 'AI_HANDLING' && normalized.content) {
-      await messageQueue.add('process', {
-        conversationId: conversation.id,
-        messageContent: normalized.content,
-      }, {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 2000 },
-      });
-      logger.info(`Queued AI processing for conversation ${conversation.id}`);
-    }
-
+    await handleAfterStore(conversation, normalized);
     logger.info(`Message received from ${waId}: ${normalized.type}`);
   } catch (error) {
     logger.error('Process message error:', error);
   }
 }
+
+// ──────────────────────────────────────────────
+// Unofficial WA Gateway message processing
+// ──────────────────────────────────────────────
+
+async function processUnofficialMessage(body) {
+  try {
+    let data = body.data;
+    if (Array.isArray(data)) data = data[0];
+    if (!data || !data.key) {
+      logger.debug('Unofficial webhook: no data or key found');
+      return;
+    }
+
+    // Skip outgoing messages
+    if (data.key.fromMe) return;
+
+    const remoteJid = data.key.remoteJid || '';
+    const waId = remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
+    if (!waId) return;
+
+    const customerName = data.pushName || null;
+    const messageId = data.key.id || `unofficial-${Date.now()}`;
+
+    // Deduplicate
+    const existing = await prisma.message.findUnique({ where: { waMessageId: messageId } });
+    if (existing) {
+      logger.debug(`Duplicate unofficial message ${messageId}, skipping`);
+      return;
+    }
+
+    // Find or create conversation
+    let conversation = await prisma.conversation.findUnique({ where: { waId } });
+    if (!conversation) {
+      conversation = await prisma.conversation.create({
+        data: { waId, customerPhone: waId, customerName, status: 'AI_HANDLING' },
+      });
+    }
+
+    // Normalize unofficial message format
+    const msg = data.message || {};
+    const normalized = normalizeUnofficialMessage(msg);
+
+    const timestamp = data.messageTimestamp
+      ? new Date(parseInt(data.messageTimestamp) * 1000)
+      : new Date();
+
+    await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        waMessageId: messageId,
+        direction: 'INBOUND',
+        type: normalized.type,
+        content: normalized.content,
+        mediaUrl: normalized.mediaUrl,
+        mediaType: normalized.mediaType,
+        timestamp,
+      },
+    });
+
+    await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: { lastMessageAt: new Date(), customerName: customerName || conversation.customerName },
+    });
+
+    await handleAfterStore(conversation, normalized);
+    logger.info(`Unofficial message from ${waId}: ${normalized.content?.substring(0, 50)}`);
+  } catch (error) {
+    logger.error('Unofficial webhook error:', error);
+  }
+}
+
+// ──────────────────────────────────────────────
+// Message normalizers
+// ──────────────────────────────────────────────
 
 function normalizeMessage(msg) {
   const result = { type: 'TEXT', content: '', mediaUrl: null, mediaType: null };
@@ -192,6 +281,35 @@ function normalizeMessage(msg) {
       break;
     default:
       result.content = `[${msg.type || 'Unknown'}]`;
+  }
+
+  return result;
+}
+
+function normalizeUnofficialMessage(msg) {
+  const result = { type: 'TEXT', content: '', mediaUrl: null, mediaType: null };
+
+  if (msg.imageMessage) {
+    result.type = 'IMAGE';
+    result.content = msg.imageMessage.caption || '[Gambar]';
+    result.mediaType = msg.imageMessage.mimetype || 'image/jpeg';
+  } else if (msg.documentMessage) {
+    result.type = 'DOCUMENT';
+    result.content = msg.documentMessage.fileName || '[Dokumen]';
+    result.mediaType = msg.documentMessage.mimetype || 'application/octet-stream';
+  } else if (msg.videoMessage) {
+    result.type = 'VIDEO';
+    result.content = msg.videoMessage.caption || '[Video]';
+    result.mediaType = msg.videoMessage.mimetype || 'video/mp4';
+  } else if (msg.audioMessage) {
+    result.type = 'AUDIO';
+    result.content = '[Audio]';
+    result.mediaType = msg.audioMessage.mimetype || 'audio/ogg';
+  } else if (msg.locationMessage) {
+    result.type = 'LOCATION';
+    result.content = `📍 ${msg.locationMessage.degreesLatitude}, ${msg.locationMessage.degreesLongitude}`;
+  } else {
+    result.content = msg.conversation || msg.extendedTextMessage?.text || '';
   }
 
   return result;

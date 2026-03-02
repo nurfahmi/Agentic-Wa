@@ -50,14 +50,14 @@
             <label for="email" class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1.5">Email</label>
             <input type="email" id="email" name="email" required autocomplete="email"
                    class="block w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-dark-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-sm"
-                   placeholder="nama@contoh.com">
+                   placeholder="Your email">
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1.5">Kata Laluan</label>
             <div class="relative">
               <input :type="showPassword ? 'text' : 'password'" id="password" name="password" required
                      class="block w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-dark-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-sm"
-                     placeholder="••••••••">
+                     placeholder="Your password">
               <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-dark-300 transition-colors">
                 <svg x-show="!showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
