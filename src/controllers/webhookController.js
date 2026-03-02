@@ -198,7 +198,7 @@ async function processUnofficialMessage(body) {
     const waId = remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
     if (!waId) return;
 
-    const customerName = data.pushName || null;
+    const customerName = body.senderInfo?.contactName || data.pushName || null;
     const messageId = data.key.id || `unofficial-${Date.now()}`;
 
     // Deduplicate
@@ -292,18 +292,22 @@ function normalizeUnofficialMessage(msg) {
   if (msg.imageMessage) {
     result.type = 'IMAGE';
     result.content = msg.imageMessage.caption || '[Gambar]';
+    result.mediaUrl = msg.imageMessage.url || null;
     result.mediaType = msg.imageMessage.mimetype || 'image/jpeg';
   } else if (msg.documentMessage) {
     result.type = 'DOCUMENT';
     result.content = msg.documentMessage.fileName || '[Dokumen]';
+    result.mediaUrl = msg.documentMessage.url || null;
     result.mediaType = msg.documentMessage.mimetype || 'application/octet-stream';
   } else if (msg.videoMessage) {
     result.type = 'VIDEO';
     result.content = msg.videoMessage.caption || '[Video]';
+    result.mediaUrl = msg.videoMessage.url || null;
     result.mediaType = msg.videoMessage.mimetype || 'video/mp4';
   } else if (msg.audioMessage) {
     result.type = 'AUDIO';
     result.content = '[Audio]';
+    result.mediaUrl = msg.audioMessage.url || null;
     result.mediaType = msg.audioMessage.mimetype || 'audio/ogg';
   } else if (msg.locationMessage) {
     result.type = 'LOCATION';

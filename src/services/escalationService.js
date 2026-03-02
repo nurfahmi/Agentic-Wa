@@ -119,6 +119,22 @@ async function escalate(conversationId, reason, description) {
 
     logger.info(`Conversation ${conversationId} escalated: ${reason}${dutyAgent ? ` → ${dutyAgent.name}` : ''}`);
 
+    // Build conversation summary (last 10 messages)
+    let conversationSummary = '';
+    try {
+      const messages = await prisma.message.findMany({
+        where: { conversationId },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+      conversationSummary = messages.reverse().map(m => {
+        const sender = m.direction === 'INBOUND' ? 'Customer' : 'AI';
+        return `${sender}: ${m.content}`;
+      }).join('\n');
+    } catch (e) {
+      logger.warn('Could not fetch conversation summary:', e.message);
+    }
+
     // Fire webhook (async, don't await to avoid blocking)
     fireWebhook({
       event: 'escalation',
@@ -127,6 +143,7 @@ async function escalate(conversationId, reason, description) {
       staff_phone: dutyAgent?.phone || '',
       conversation_id: conversationId,
       timestamp: new Date().toISOString(),
+      conversation_summary: conversationSummary,
     });
 
     return dutyAgent; // { name, phone } or null
