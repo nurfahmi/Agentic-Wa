@@ -69,6 +69,7 @@ async function processMessage(conversationId, userMessage) {
         tools: toolDefinitions,
         tool_choice: 'auto',
         temperature: 0.3,
+        response_format: { type: 'json_object' },
       });
 
       const choice = completion.choices[0];
