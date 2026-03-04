@@ -281,6 +281,8 @@ model GovernmentEmployer {
   category     String?
   sector       String?
   deduction    Int?
+  aliases      String?  @db.Text
+  notes        String?  @db.Text
   isApproved   Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -355,12 +357,19 @@ model DutyAgent {
 model ChatExample {
   id              Int       @id @default(autoincrement())
   category        String
+  stage           String?
+  flowId          String?
+  turnOrder       Int       @default(0)
+  priority        Int       @default(5)
   customerMessage String    @db.Text
   adminReply      String    @db.Text
+  isNegative      Boolean   @default(false)
   active          Boolean   @default(true)
   createdAt       DateTime  @default(now())
 
   @@index([category])
+  @@index([stage])
+  @@index([flowId])
   @@index([active])
   @@map("chat_examples")
 }

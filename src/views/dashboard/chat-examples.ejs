@@ -67,6 +67,8 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-2">
             <span class="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400"><%= ex.category %></span>
+            <% if (ex.priority >= 8) { %><span class="px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">★ Tinggi</span><% } %>
+            <% if (ex.isNegative) { %><span class="px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400">✕ Negatif</span><% } %>
             <% if (!ex.active) { %><span class="text-xs text-gray-400">tidak aktif</span><% } %>
           </div>
           <div class="space-y-1.5">
@@ -146,6 +148,7 @@
           <option value="product_info">product_info</option>
           <option value="escalation">escalation</option>
           <option value="follow_up">follow_up</option>
+          <option value="staff_verify">staff_verify</option>
           <option value="general">general</option>
         </select>
       </div>
@@ -156,6 +159,22 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Balasan Admin</label>
         <textarea name="adminReply" rows="3" required class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white" placeholder="contoh: Salam tuan/puan..."></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Keutamaan</label>
+          <select name="priority" class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white">
+            <option value="3">Rendah</option>
+            <option value="5" selected>Biasa</option>
+            <option value="8">Tinggi (sentiasa ditunjuk)</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <label class="flex items-center gap-2 p-2.5 rounded-xl border border-gray-300 dark:border-dark-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-700 w-full">
+            <input type="checkbox" name="isNegative" value="true" class="rounded border-gray-300 dark:border-dark-600 text-red-600 focus:ring-red-500 w-4 h-4">
+            <span class="text-sm text-gray-700 dark:text-dark-300">Contoh negatif</span>
+          </label>
+        </div>
       </div>
       <div class="flex justify-end gap-3">
         <button type="button" onclick="closeModal('addModal')" class="px-4 py-2 rounded-xl border border-gray-300 dark:border-dark-600 text-sm font-medium text-gray-700 dark:text-dark-300">Batal</button>

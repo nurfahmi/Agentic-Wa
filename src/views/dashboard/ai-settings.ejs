@@ -216,6 +216,17 @@
         </div>
       </div>
 
+      <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Kata Kunci Pesaing / Suspek</h3>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Jika pelanggan sebut kata kunci ini, AI akan lebih berhati-hati dan tidak dedahkan maklumat dalaman.</p>
+        </div>
+        <div class="p-6">
+          <input type="text" name="ai_competitor_keywords" value="<%= settings.ai_competitor_keywords || '' %>" placeholder="nama pesaing 1, nama pesaing 2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow">
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">Pisahkan dengan koma. Kosongkan jika tidak perlu.</p>
+        </div>
+      </div>
+
     </div>
   </div>
 

@@ -18,6 +18,7 @@ const DEFAULTS = {
   ai_bad_words: 'scam,scammer,tipu,penipuan,bodoh,stupid,babi,sial',
   ai_context_messages: '20',
   ai_manual_keywords: '',
+  ai_competitor_keywords: '',
 };
 
 async function getAiSettings() {

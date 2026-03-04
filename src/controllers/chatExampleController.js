@@ -3,6 +3,20 @@ const multer = require('multer');
 const OpenAI = require('openai');
 const { getOpenAIConfig } = require('../utils/getOpenAIConfig');
 
+const CATEGORY_TO_STAGE = {
+  'greeting': 'greeting',
+  'scam_defense': 'scam_defense',
+  'eligibility_ask': 'employer_verify',
+  'employer_check': 'employer_verify',
+  'eligible': 'eligibility',
+  'not_eligible': 'eligibility',
+  'product_info': 'product_info',
+  'escalation': 'escalation',
+  'follow_up': 'follow_up',
+  'staff_verify': 'staff_verify',
+  'general': 'general',
+};
+
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 20 } });
 exports.uploadMiddleware = upload.array('chatFile', 20);
 
@@ -135,7 +149,7 @@ exports.uploadChat = async (req, res) => {
             where: { customerMessage: pair.customerMessage, adminReply: pair.adminReply },
           });
           if (exists) { skipped++; continue; }
-          await prisma.chatExample.create({ data: pair });
+          await prisma.chatExample.create({ data: { ...pair, stage: CATEGORY_TO_STAGE[pair.category] || 'general' } });
           added++;
         }
 
@@ -158,11 +172,20 @@ exports.uploadChat = async (req, res) => {
 // Add single example manually
 exports.addExample = async (req, res) => {
   try {
-    const { category, customerMessage, adminReply } = req.body;
+    const { category, customerMessage, adminReply, priority, isNegative } = req.body;
     if (!category || !customerMessage || !adminReply) {
       return res.status(400).json({ error: 'Semua medan diperlukan' });
     }
-    await prisma.chatExample.create({ data: { category, customerMessage, adminReply } });
+    await prisma.chatExample.create({
+      data: {
+        category,
+        customerMessage,
+        adminReply,
+        stage: CATEGORY_TO_STAGE[category] || 'general',
+        priority: parseInt(priority) || 5,
+        isNegative: isNegative === 'true' || isNegative === true,
+      },
+    });
     res.json({ success: true });
   } catch (error) {
     console.error('Add example error:', error);

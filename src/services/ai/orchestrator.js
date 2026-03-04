@@ -158,12 +158,16 @@ async function processMessage(conversationId, userMessage) {
       },
     });
 
-    // 11. Update conversation state
-    await updateConversationState(conversationId, {
+    // 11. Update conversation state — merge AI's state_update
+    const stateData = {
       lastIntent: aiResult.intent,
       lastConfidence: aiResult.confidence,
       stage: aiResult.required_action,
-    });
+    };
+    if (aiResult.state_update && typeof aiResult.state_update === 'object') {
+      Object.assign(stateData, aiResult.state_update);
+    }
+    await updateConversationState(conversationId, stateData);
 
     return aiResult;
   } catch (error) {
