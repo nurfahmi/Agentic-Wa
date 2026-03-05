@@ -32,6 +32,11 @@ async function sendText(to, text) {
   return getService(type).sendText(to, text);
 }
 
+async function sendImage(to, imageUrl, caption = '') {
+  const type = await getWaType();
+  return getService(type).sendImage(to, imageUrl, caption);
+}
+
 async function sendTemplate(to, templateName, languageCode, components) {
   const type = await getWaType();
   const svc = getService(type);
@@ -64,4 +69,4 @@ function clearCache() {
   waTypeCache = { value: null, ts: 0 };
 }
 
-module.exports = { sendText, sendTemplate, downloadMedia, markAsRead, sendPresence, getWaType, clearCache };
+module.exports = { sendText, sendImage, sendTemplate, downloadMedia, markAsRead, sendPresence, getWaType, clearCache };

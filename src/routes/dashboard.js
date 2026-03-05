@@ -38,7 +38,7 @@ router.post('/change-password', require('../controllers/authController').changeP
 // AI Settings - Admin+ only
 const aiSettingsController = require('../controllers/aiSettingsController');
 router.get('/ai-settings', authorize('SUPERADMIN', 'ADMIN'), aiSettingsController.aiSettingsPage);
-router.post('/ai-settings', authorize('SUPERADMIN', 'ADMIN'), aiSettingsController.updateAiSettings);
+router.post('/ai-settings', authorize('SUPERADMIN', 'ADMIN'), aiSettingsController.uploadMiddleware, aiSettingsController.updateAiSettings);
 
 // Duty Agents - Admin+ only
 const dutyAgentController = require('../controllers/dutyAgentController');

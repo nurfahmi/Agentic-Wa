@@ -94,7 +94,16 @@ try {
               .replace(/{agent_wa_url}/g, `https://wa.me/${waPhone}`);
           }
 
-          await whatsappService.sendText(conversation.customerPhone, replyText);
+          // If scam defense intent and image is configured, send image with caption
+          if (aiResult.intent === 'scam_defense' && aiSettings.ai_scam_defense_image) {
+            const caption = aiSettings.ai_scam_defense_caption || replyText;
+            const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3003}`;
+            const imageUrl = `${baseUrl}${aiSettings.ai_scam_defense_image}`;
+            await whatsappService.sendImage(conversation.customerPhone, imageUrl, caption);
+            replyText = `[Gambar] ${caption}`;
+          } else {
+            await whatsappService.sendText(conversation.customerPhone, replyText);
+          }
 
           // Store outbound message
           await prisma.message.create({

@@ -191,49 +191,6 @@
                 </label>
               </div>
             </div>
-            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
-              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="pre_eligible" <%= triggers.includes('pre_eligible') ? 'checked' : '' %>>
-              <div>
-                <span class="text-sm font-medium text-gray-900 dark:text-white">Pra-Layak disahkan</span>
-                <p class="text-xs text-gray-500 dark:text-dark-400">Pelanggan disahkan sebagai Penjawat Awam</p>
-              </div>
-            </label>
-            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
-              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="user_request_human" <%= triggers.includes('user_request_human') ? 'checked' : '' %>>
-              <div>
-                <span class="text-sm font-medium text-gray-900 dark:text-white">Minta pegawai manusia</span>
-                <p class="text-xs text-gray-500 dark:text-dark-400">Pelanggan minta cakap dengan orang sebenar</p>
-              </div>
-            </label>
-            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
-              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="angry_keywords" <%= triggers.includes('angry_keywords') ? 'checked' : '' %>>
-              <div>
-                <span class="text-sm font-medium text-gray-900 dark:text-white">Pelanggan marah</span>
-                <p class="text-xs text-gray-500 dark:text-dark-400">Kata kesat atau marah berulang kali</p>
-              </div>
-            </label>
-            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
-              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="follow_up" <%= triggers.includes('follow_up') ? 'checked' : '' %>>
-              <div>
-                <span class="text-sm font-medium text-gray-900 dark:text-white">Follow up</span>
-                <p class="text-xs text-gray-500 dark:text-dark-400">Pelanggan sebut "follow up", "nak teruskan", "berminat"</p>
-              </div>
-            </label>
-            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
-              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="low_confidence" <%= triggers.includes('low_confidence') ? 'checked' : '' %>>
-              <div>
-                <span class="text-sm font-medium text-gray-900 dark:text-white">AI tidak yakin</span>
-                <p class="text-xs text-gray-500 dark:text-dark-400">Confidence rendah — lebih selamat serah kepada manusia</p>
-              </div>
-            </label>
-            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
-              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="borderline" <%= triggers.includes('borderline') ? 'checked' : '' %>>
-              <div>
-                <span class="text-sm font-medium text-gray-900 dark:text-white">Kelayakan sempadan</span>
-                <p class="text-xs text-gray-500 dark:text-dark-400">Status REQUIRES_REVIEW — perlu semakan manual</p>
-              </div>
-            </label>
-          </div>
 
           <!-- Silence hours -->
           <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-700">
@@ -247,12 +204,34 @@
 
       <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50">
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Kata Kunci Sensitif</h3>
-          <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Jika mesej mengandungi kata ini, AI akan balas secara khas (bukan greeting biasa).</p>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">🛡️ Balasan Kata Negatif</h3>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Apabila pelanggan guna kata negatif (scam, tipu, dll), AI akan balas dengan gambar + caption ini.</p>
         </div>
-        <div class="p-6">
-          <input type="text" name="ai_bad_words" value="<%= settings.ai_bad_words || defaults.ai_bad_words %>" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow">
-          <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">Pisahkan dengan koma. Contoh: scam, tipu, bodoh, penipu</p>
+        <div class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Kata Kunci Negatif</label>
+            <input type="text" name="ai_bad_words" value="<%= settings.ai_bad_words || defaults.ai_bad_words %>" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow">
+            <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">Pisahkan dengan koma. Contoh: scam, tipu, bodoh, penipu</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Gambar Balasan</label>
+            <p class="text-xs text-gray-500 dark:text-dark-400 mb-2">Muat naik gambar (contoh: sijil koperasi) yang akan dihantar bersama caption apabila kata negatif dikesan.</p>
+            <div class="flex items-center gap-4">
+              <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-700 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors">
+                <span>📷 Pilih Gambar</span>
+                <input type="file" name="ai_scam_defense_image" accept="image/*" class="hidden" onchange="previewScamImage(this)">
+              </label>
+              <% if (settings.ai_scam_defense_image) { %>
+                <img src="<%= settings.ai_scam_defense_image %>" alt="Scam defense" class="w-16 h-16 rounded-lg object-cover border border-gray-200 dark:border-dark-600" id="scamImagePreview">
+              <% } else { %>
+                <div class="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 dark:border-dark-600 flex items-center justify-center text-gray-400 text-xs" id="scamImagePreview">Tiada</div>
+              <% } %>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Caption Gambar</label>
+            <textarea name="ai_scam_defense_caption" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_scam_defense_caption || 'Kami adalah koperasi berdaftar di bawah Suruhanjaya Koperasi Malaysia (SKM). Sila rujuk sijil pendaftaran kami.' %></textarea>
+          </div>
         </div>
       </div>
 
@@ -424,6 +403,26 @@ function removeKeyword(index) {
 // Initial render
 renderKeywordsTable();
 
+// Preview scam defense image
+function previewScamImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('scamImagePreview');
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (preview.tagName === 'IMG') {
+      preview.src = e.target.result;
+    } else {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.className = 'w-16 h-16 rounded-lg object-cover border border-gray-200 dark:border-dark-600';
+      img.id = 'scamImagePreview';
+      preview.replaceWith(img);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
 // Form submit
 document.getElementById('aiSettingsForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -432,14 +431,12 @@ document.getElementById('aiSettingsForm').addEventListener('submit', async (e) =
   document.getElementById('escalationTriggersInput').value = checked.join(',');
   // Sync manual keywords (newline-separated)
   document.getElementById('manualKeywordsInput').value = manualKeywords.join('\n');
-  // Send as urlencoded (Express can parse this, not multipart FormData)
+  // Use FormData for file uploads
   const formData = new FormData(e.target);
-  const params = new URLSearchParams(formData);
   try {
     const res = await fetch('/dashboard/ai-settings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
+      body: formData,
     });
     const result = await res.json();
     if (result.success) { alert('Perubahan berjaya disimpan!'); location.reload(); }

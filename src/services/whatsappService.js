@@ -22,6 +22,26 @@ async function sendText(to, text) {
   }
 }
 
+async function sendImage(to, imageUrl, caption = '') {
+  try {
+    const waba = await getWabaConfig();
+    const res = await axios.post(
+      `https://graph.facebook.com/${waba.apiVersion}/${waba.phoneNumberId}/messages`,
+      {
+        messaging_product: 'whatsapp',
+        to,
+        type: 'image',
+        image: { link: imageUrl, caption },
+      },
+      { headers: { Authorization: `Bearer ${waba.token}`, 'Content-Type': 'application/json' } }
+    );
+    return res.data;
+  } catch (error) {
+    logger.error('WABA send image error:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
 async function sendTemplate(to, templateName, languageCode = 'ms', components = []) {
   try {
     const waba = await getWabaConfig();
@@ -82,4 +102,4 @@ async function markAsRead(messageId) {
   }
 }
 
-module.exports = { sendText, sendTemplate, downloadMedia, markAsRead };
+module.exports = { sendText, sendImage, sendTemplate, downloadMedia, markAsRead };
