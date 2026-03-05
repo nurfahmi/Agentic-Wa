@@ -80,7 +80,7 @@ try {
       const isOffTopic = OFF_TOPIC_INTENTS.includes(aiResult.intent);
       const prevMeta = conv?.metadata || {};
       const offTopicCount = isOffTopic ? (prevMeta.offTopicCount || 0) + 1 : 0;
-      const MAX_OFF_TOPIC = 3;
+      const MAX_OFF_TOPIC = parseInt(aiSettings.ai_offtopic_limit) || 3;
 
       if (offTopicCount >= MAX_OFF_TOPIC) {
         // Too many unrelated messages — AI disengages

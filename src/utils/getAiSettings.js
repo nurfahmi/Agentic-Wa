@@ -25,6 +25,7 @@ const DEFAULTS = {
   ai_scam_defense_image: '',
   ai_scam_defense_caption: 'Kami adalah koperasi berdaftar di bawah Suruhanjaya Koperasi Malaysia (SKM). Sila rujuk sijil pendaftaran kami.',
   ai_scam_defense_mode: 'ai_generated',
+  ai_offtopic_limit: '3',
 };
 
 async function getAiSettings() {

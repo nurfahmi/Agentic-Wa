@@ -194,11 +194,19 @@
           </div>
 
           <!-- Silence hours -->
-          <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-700">
-            <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1">Tempoh Senyap AI Selepas Eskalasi (jam)</label>
-            <p class="text-xs text-gray-500 dark:text-dark-400 mb-2">AI tidak akan balas mesej baru selepas dieskalasi, sehingga tempoh ini tamat. Selepas itu, AI akan mula balas semula.</p>
-            <input type="number" name="ai_silence_hours" value="<%= settings.ai_silence_hours || defaults.ai_silence_hours %>" min="1" max="168" class="w-32 px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-            <span class="text-xs text-gray-400 ml-2">jam (1-168)</span>
+          <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-700 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1">Tempoh Senyap AI Selepas Eskalasi (jam)</label>
+              <p class="text-xs text-gray-500 dark:text-dark-400 mb-2">AI tidak akan balas mesej baru selepas dieskalasi, sehingga tempoh ini tamat.</p>
+              <input type="number" name="ai_silence_hours" value="<%= settings.ai_silence_hours || defaults.ai_silence_hours %>" min="1" max="168" class="w-32 px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              <span class="text-xs text-gray-400 ml-2">jam (1-168)</span>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-900 dark:text-white mb-1">Had Mesej Tidak Berkaitan</label>
+              <p class="text-xs text-gray-500 dark:text-dark-400 mb-2">Jika pelanggan hantar mesej tidak berkaitan berturut-turut melebihi had ini, AI akan berhenti balas.</p>
+              <input type="number" name="ai_offtopic_limit" value="<%= settings.ai_offtopic_limit || defaults.ai_offtopic_limit %>" min="1" max="20" class="w-32 px-3 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+              <span class="text-xs text-gray-400 ml-2">mesej (1-20)</span>
+            </div>
           </div>
         </div>
       </div>
