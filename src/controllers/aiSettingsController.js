@@ -39,7 +39,7 @@ exports.updateAiSettings = async (req, res) => {
       'ai_escalation_triggers', 'ai_bad_words', 'ai_manual_keywords',
       'ai_competitor_keywords',
       'ai_greeting_mode', 'ai_not_eligible_mode', 'ai_escalation_mode',
-      'ai_slip_mode', 'ai_scam_defense_caption',
+      'ai_slip_mode', 'ai_scam_defense_caption', 'ai_scam_defense_mode',
     ];
     for (const key of fields) {
       if (req.body[key] !== undefined) {

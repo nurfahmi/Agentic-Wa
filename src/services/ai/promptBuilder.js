@@ -216,6 +216,7 @@ ${ai.ai_custom_instructions ? `ARAHAN TAMBAHAN:\n${ai.ai_custom_instructions}\n`
 - Greeting: "${ai.ai_greeting_message}" ${ai.ai_greeting_mode === 'exact' ? '→ GUNA TEPAT seperti tertulis' : '→ sesuaikan gaya, jangan salin tepat-tepat'}
 - TIDAK layak: "${ai.ai_not_eligible_message}" ${ai.ai_not_eligible_mode === 'exact' ? '→ GUNA TEPAT seperti tertulis. Hanya tukar {reason}' : '→ sesuaikan gaya, jangan salin tepat-tepat'}
 - Eskalasi: "${ai.ai_escalation_message}" ${ai.ai_escalation_mode === 'exact' ? '→ GUNA TEPAT seperti tertulis' : '→ sesuaikan gaya, jangan salin tepat-tepat'}
+- Scam defense: "${ai.ai_scam_defense_caption || 'Kami adalah koperasi berdaftar.'}" ${ai.ai_scam_defense_mode === 'exact' ? '→ GUNA TEPAT seperti tertulis' : '→ sesuaikan gaya, jangan salin tepat-tepat'}
 
 BILA ESCALATE (set escalate = true):
 - Pelanggan SAH kerajaan (employer eligible) → escalate supaya pegawai hubungi

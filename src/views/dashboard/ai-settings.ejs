@@ -229,7 +229,19 @@
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">Caption Gambar</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Caption Gambar</label>
+              <div class="flex items-center gap-1 bg-gray-100 dark:bg-dark-700 rounded-lg p-0.5">
+                <label class="cursor-pointer">
+                  <input type="radio" name="ai_scam_defense_mode" value="exact" <%= (settings.ai_scam_defense_mode || 'ai_generated') === 'exact' ? 'checked' : '' %> class="peer hidden">
+                  <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">📋 Tepat</span>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="ai_scam_defense_mode" value="ai_generated" <%= (settings.ai_scam_defense_mode || 'ai_generated') === 'ai_generated' ? 'checked' : '' %> class="peer hidden">
+                  <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">🤖 AI</span>
+                </label>
+              </div>
+            </div>
             <textarea name="ai_scam_defense_caption" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_scam_defense_caption || 'Kami adalah koperasi berdaftar di bawah Suruhanjaya Koperasi Malaysia (SKM). Sila rujuk sijil pendaftaran kami.' %></textarea>
           </div>
         </div>
