@@ -79,41 +79,95 @@ exports.receive = async (req, res) => {
 // ──────────────────────────────────────────────
 
 async function handleAfterStore(conversation, normalized) {
-  // If customer sends salary slip (image/document) → check if auto-escalation enabled
+  // Documents/images handling
   if (conversation.status === 'AI_HANDLING' && (normalized.type === 'IMAGE' || normalized.type === 'DOCUMENT')) {
     const { getAiSettings } = require('../utils/getAiSettings');
     const aiSettings = await getAiSettings();
-    const triggers = (aiSettings.ai_escalation_triggers || '').split(',');
+    const slipMode = aiSettings.ai_slip_mode || 'smart_ocr';
 
-    if (triggers.includes('slip_received')) {
+    // Option 1: Auto escalate (no OCR, immediate escalation)
+    if (slipMode === 'auto_escalate') {
+      try {
+        const whatsappService = require('../services/waAdapter');
+        const escalationService = require('../services/escalationService');
+        const dutyAgent = await escalationService.escalate(conversation.id, 'MANUAL', 'Pelanggan hantar dokumen — auto escalate');
+
+        let replyText = aiSettings.ai_escalation_message || 'Terima kasih, dokumen telah diterima. Pegawai kami akan hubungi tuan/puan.';
+        if (dutyAgent) {
+          const phone = dutyAgent.phone.replace(/[\s\-\(\)]/g, '');
+          const waPhone = phone.startsWith('0') ? '6' + phone : phone.startsWith('+') ? phone.slice(1) : phone;
+          replyText = replyText
+            .replace(/{agent_name}/g, dutyAgent.name)
+            .replace(/{agent_phone}/g, dutyAgent.phone)
+            .replace(/{agent_wa_url}/g, `https://wa.me/${waPhone}`);
+        }
+
+        await whatsappService.sendText(conversation.customerPhone, replyText);
+        await prisma.message.create({
+          data: { conversationId: conversation.id, direction: 'OUTBOUND', type: 'TEXT', content: replyText, isAiGenerated: true },
+        });
+        logger.info(`Conversation ${conversation.id} auto-escalated: document received → ${dutyAgent?.name || 'no agent'}`);
+      } catch (err) {
+        logger.error('Auto escalate error:', err);
+      }
+      return;
+    }
+
+    // Option 2: Smart OCR (download → extract text → AI processes)
+    try {
       const whatsappService = require('../services/waAdapter');
-      const escalationService = require('../services/escalationService');
+      const path = require('path');
+      const fs = require('fs');
 
-      // Escalate and get assigned duty agent
-      const dutyAgent = await escalationService.escalate(conversation.id, 'MANUAL', 'Pelanggan hantar slip gaji — perlu semakan manual');
+      const uploadDir = path.join(__dirname, '../../uploads/wa');
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-      // Build reply with agent info
-      let replyText = aiSettings.ai_slip_received_message || 'Terima kasih, slip gaji telah diterima. Pegawai kami akan hubungi tuan/puan untuk semakan kelayakan. Terima kasih 🧕';
-      if (dutyAgent) {
-        replyText += `\n\nPegawai bertugas: ${dutyAgent.name}\nNo. telefon: ${dutyAgent.phone}`;
+      let filePath = null;
+      try {
+        filePath = await whatsappService.downloadMedia(normalized.mediaUrl, uploadDir, normalized.mediaType);
+      } catch (dlErr) {
+        logger.error('Media download failed:', dlErr.message);
       }
 
-      await whatsappService.sendText(conversation.customerPhone, replyText);
+      let ocrText = '';
+      if (filePath) {
+        const ext = path.extname(filePath).toLowerCase();
+        try {
+          if (ext === '.pdf') {
+            const pdfParse = require('pdf-parse');
+            const buf = fs.readFileSync(filePath);
+            const pdfData = await pdfParse(buf);
+            ocrText = pdfData.text || '';
+          } else if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
+            const Tesseract = require('tesseract.js');
+            const { data: { text } } = await Tesseract.recognize(filePath, 'eng+msa');
+            ocrText = text;
+          }
+        } catch (ocrErr) {
+          logger.error('OCR/PDF extraction failed:', ocrErr.message);
+        }
+      }
 
-      // Store outbound reply
-      await prisma.message.create({
-        data: {
-          conversationId: conversation.id,
-          direction: 'OUTBOUND',
-          type: 'TEXT',
-          content: replyText,
-          isAiGenerated: true,
-        },
+      const parsed = parsePayslipText(ocrText);
+      const ocrMessage = parsed.document_valid
+        ? `Pelanggan telah memuat naik slip gaji. Hasil OCR:\nNama: ${parsed.name}\nMajikan: ${parsed.employer}\nGaji: RM${parsed.monthly_salary}\nJenis: ${parsed.employment_type}\n\nSila semak dan proses kelayakan.`
+        : ocrText
+          ? `Pelanggan telah memuat naik dokumen (${normalized.content}). Teks yang dikesan:\n${ocrText.substring(0, 500)}\n\nSila analisa dokumen ini.`
+          : `Pelanggan telah memuat naik dokumen (${normalized.content}). Tidak dapat membaca teks dari dokumen ini.`;
+
+      await messageQueue.add('process', {
+        conversationId: conversation.id,
+        messageContent: ocrMessage,
+        messageType: normalized.type,
+      }, {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
       });
-
-      logger.info(`Conversation ${conversation.id} escalated: salary slip received → ${dutyAgent?.name || 'no agent available'}`);
-      return; // don't queue for AI
+      logger.info(`Queued AI processing for document in conversation ${conversation.id}`);
+    } catch (error) {
+      logger.error('Document processing error:', error);
     }
+    return;
   }
 
   // Text messages → AI processing
@@ -128,6 +182,38 @@ async function handleAfterStore(conversation, normalized) {
     });
     logger.info(`Queued AI processing for conversation ${conversation.id}`);
   }
+}
+
+// Parse payslip text (same logic as demoController)
+function parsePayslipText(text) {
+  if (!text) return { name: '', employer: '', employment_type: '', monthly_salary: 0, document_valid: false };
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const result = { name: '', employer: '', employment_type: '', monthly_salary: 0, document_valid: false };
+
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    if (!result.name && (lower.includes('nama') || lower.includes('name'))) {
+      const m = line.match(/(?:nama|name)\s*[:\-]\s*(.+)/i);
+      if (m) result.name = m[1].trim();
+    }
+    if (!result.employer && (lower.includes('majikan') || lower.includes('employer'))) {
+      const m = line.match(/(?:majikan|employer)\s*[:\-]\s*(.+)/i);
+      if (m) result.employer = m[1].trim();
+    }
+    if (!result.employer) {
+      if (/^kementerian\s+/i.test(line)) result.employer = line.trim();
+      else if (/^jabatan\s+/i.test(line) && !lower.includes('jawatan')) result.employer = line.trim();
+    }
+    if (!result.monthly_salary && (lower.includes('gaji') || lower.includes('salary') || lower.includes('pendapatan'))) {
+      const m = line.match(/(?:rm|myr)?\s*([\d,]+\.?\d*)/i);
+      if (m) { const val = parseFloat(m[1].replace(/,/g, '')); if (val > 100) result.monthly_salary = val; }
+    }
+    if (lower.includes('tetap') || lower.includes('permanent')) result.employment_type = 'TETAP';
+    else if (lower.includes('kontrak') || lower.includes('contract')) result.employment_type = 'KONTRAK';
+  }
+
+  result.document_valid = !!(result.name && result.monthly_salary > 0);
+  return result;
 }
 
 // ──────────────────────────────────────────────

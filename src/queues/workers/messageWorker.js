@@ -84,9 +84,14 @@ try {
         if (conversation) {
           let replyText = aiResult.reply_text;
 
-          // If escalated, append duty agent info
+          // If escalated, use escalation message template with agent info
           if (escalated && escalated.dutyAgent) {
-            replyText += `\n\nPegawai bertugas: ${escalated.dutyAgent.name}\nNo. telefon: ${escalated.dutyAgent.phone}`;
+            const phone = escalated.dutyAgent.phone.replace(/[\s\-\(\)]/g, '');
+            const waPhone = phone.startsWith('0') ? '6' + phone : phone.startsWith('+') ? phone.slice(1) : phone;
+            replyText = (aiSettings.ai_escalation_message || replyText)
+              .replace(/{agent_name}/g, escalated.dutyAgent.name)
+              .replace(/{agent_phone}/g, escalated.dutyAgent.phone)
+              .replace(/{agent_wa_url}/g, `https://wa.me/${waPhone}`);
           }
 
           await whatsappService.sendText(conversation.customerPhone, replyText);

@@ -9,7 +9,7 @@ const DEFAULTS = {
   ai_greeting_message: 'Salam Tuan/Puan, boleh saya tahu Tuan/Puan bekerja di bawah kementerian mana?\n\nUntuk makluman, pinjaman peribadi I-Syariah ini khas untuk Anggota Kerajaan sahaja. 😊',
   ai_eligible_message: 'Baik, adakah tuan/puan berminat buat semakan kelayakan? Jika YE, boleh whatsapp gaji slip terkini anda utk semak kelayakan ye😁',
   ai_not_eligible_message: 'Maaf tuan/puan, {reason}. Terima kasih🧕',
-  ai_escalation_message: 'Baik, pegawai kami akan hubungi tuan/puan untuk bantuan lanjut. Terima kasih🧕',
+  ai_escalation_message: 'Baik, pegawai kami akan hubungi tuan/puan untuk bantuan lanjut.\n\nPegawai bertugas: *{agent_name}*\nNo. telefon: {agent_phone}\nWhatsApp: {agent_wa_url}\n\nTerima kasih🧕',
   ai_slip_received_message: 'Terima kasih, slip gaji telah diterima. Pegawai kami akan hubungi tuan/puan untuk semakan kelayakan. Terima kasih 🧕',
   ai_product_info: 'Pinjaman Peribadi I-Syariah untuk Anggota Kerajaan (Penjawat Awam) sahaja. Syarat: Mesti penjawat awam, gaji minimum RM1,800, umur bawah 58 tahun, potongan gaji tidak melebihi 60%. Koperasi Muhibbah Alliance bekerjasama dengan Koperasi Kopunas Kuwait Finance House, Yayasan Ihsan Rakyat Ambank, Ukhwah Maybank, Bank Rakyat dan Yayasan Teguh Iman. Ibu pejabat di KL.',
   ai_custom_instructions: 'Balas dengan ringkas dan mesra. Guna bahasa santai seperti admin biasa. Boleh guna emoji 🧕😁. Jangan tulis ayat panjang. Satu hingga dua ayat sahaja setiap mesej.',
@@ -19,6 +19,11 @@ const DEFAULTS = {
   ai_context_messages: '20',
   ai_manual_keywords: '',
   ai_competitor_keywords: '',
+  ai_greeting_mode: 'ai_generated',
+  ai_eligible_mode: 'ai_generated',
+  ai_not_eligible_mode: 'ai_generated',
+  ai_escalation_mode: 'ai_generated',
+  ai_slip_mode: 'smart_ocr',
 };
 
 async function getAiSettings() {

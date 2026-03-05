@@ -3,10 +3,6 @@ const logger = require('../utils/logger');
 const { getAiSettings } = require('../utils/getAiSettings');
 const axios = require('axios');
 
-const ANGRY_KEYWORDS = ['marah', 'bodoh', 'stupid', 'useless', 'scam', 'tipu', 'tidak berguna', 'complaint', 'aduan', 'saman', 'babi', 'sial'];
-const HUMAN_KEYWORDS = ['agent', 'pegawai', 'manusia', 'human', 'orang', 'cakap dengan orang'];
-const FOLLOWUP_KEYWORDS = ['follow up', 'nak teruskan', 'berminat', 'nak apply', 'nak mohon', 'bagaimana nak mohon', 'saya setuju', 'proceed', 'seterusnya', 'langkah seterusnya', 'nak buat pinjaman', 'nak pinjam', 'boleh teruskan'];
-
 /**
  * Fire webhook to external service (Make.com / Zapier / n8n)
  */
@@ -32,56 +28,25 @@ async function checkAutoEscalation(conversationId, message, aiResult) {
   const conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
   if (conversation && conversation.status === 'ESCALATED') return false;
 
-  const aiSettings = await getAiSettings();
-  const enabledTriggers = (aiSettings.ai_escalation_triggers || '').split(',');
-  const reasons = [];
-  const lowerMsg = message.toLowerCase();
+  let reason = null;
 
-  // Customer is pre-eligible
-  if (enabledTriggers.includes('pre_eligible') && aiResult.eligibility_status === 'PRE_ELIGIBLE') {
-    reasons.push('PRE_ELIGIBLE');
+  // 1. AI decided to escalate (primary — trust the AI's analysis)
+  if (aiResult.escalate) {
+    reason = aiResult.intent || 'AI_ESCALATE';
   }
 
-  // Customer wants to follow up / proceed
-  if (enabledTriggers.includes('follow_up') && FOLLOWUP_KEYWORDS.some((kw) => lowerMsg.includes(kw))) {
-    reasons.push('USER_REQUEST');
+  // 2. Safety net: PRE_ELIGIBLE always escalates
+  if (aiResult.eligibility_status === 'PRE_ELIGIBLE') {
+    reason = 'PRE_ELIGIBLE';
   }
 
-  // Low confidence
-  if (enabledTriggers.includes('low_confidence') && aiResult.confidence < 0.75) {
-    reasons.push('LOW_CONFIDENCE');
-  }
-
-  // Angry keywords
-  if (enabledTriggers.includes('angry_keywords') && ANGRY_KEYWORDS.some((kw) => lowerMsg.includes(kw))) {
-    reasons.push('ANGRY_KEYWORDS');
-  }
-
-  // OCR failure
+  // 3. Safety net: OCR failure
   if (aiResult.required_action === 'ocr_failed') {
-    reasons.push('OCR_FAILURE');
+    reason = 'OCR_FAILURE';
   }
 
-  // Borderline eligibility
-  if (enabledTriggers.includes('borderline') && aiResult.eligibility_status === 'REQUIRES_REVIEW') {
-    reasons.push('BORDERLINE_ELIGIBILITY');
-  }
-
-  // User explicitly requests human
-  if (enabledTriggers.includes('user_request_human') && HUMAN_KEYWORDS.some((kw) => lowerMsg.includes(kw))) {
-    reasons.push('USER_REQUEST');
-  }
-
-  // AI itself decided to escalate
-  if (aiResult.escalate && reasons.length === 0) {
-    reasons.push('MANUAL');
-  }
-
-  // Deduplicate
-  const uniqueReasons = [...new Set(reasons)];
-
-  if (uniqueReasons.length > 0) {
-    const dutyAgent = await escalate(conversationId, uniqueReasons[0], uniqueReasons.join(', '));
+  if (reason) {
+    const dutyAgent = await escalate(conversationId, reason, aiResult.reason || reason);
     return { escalated: true, dutyAgent };
   }
 

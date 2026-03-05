@@ -82,52 +82,99 @@
 
   <!-- Tab: Messages -->
   <div id="tab-messages" class="tab-content hidden">
+
     <div class="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50">
-        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Contoh Mesej</h3>
-        <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Contoh untuk panduan nada dan gaya AI. AI akan sesuaikan secara dinamik — bukan copy-paste.</p>
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Template Mesej</h3>
+        <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">Tetapkan mesej balasan AI. Pilih 📋 Tepat (salin tepat) atau 🤖 AI (sesuaikan gaya) untuk setiap mesej.</p>
       </div>
       <div class="p-6 space-y-5">
+
+        <!-- Greeting -->
         <div>
-          <div class="flex items-center gap-2 mb-1.5">
-            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Greeting / Mesej Pertama</label>
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Greeting / Mesej Pertama</label>
+            </div>
+            <div class="flex items-center gap-1 bg-gray-100 dark:bg-dark-700 rounded-lg p-0.5">
+              <label class="cursor-pointer">
+                <input type="radio" name="ai_greeting_mode" value="exact" <%= (settings.ai_greeting_mode || 'ai_generated') === 'exact' ? 'checked' : '' %> class="peer hidden">
+                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">📋 Tepat</span>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="ai_greeting_mode" value="ai_generated" <%= (settings.ai_greeting_mode || 'ai_generated') === 'ai_generated' ? 'checked' : '' %> class="peer hidden">
+                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">🤖 AI</span>
+              </label>
+            </div>
           </div>
           <textarea name="ai_greeting_message" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_greeting_message || defaults.ai_greeting_message %></textarea>
         </div>
 
+        <!-- SAH Kerajaan -->
         <div>
-          <div class="flex items-center gap-2 mb-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Pelanggan SAH Kerajaan</label>
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Pelanggan SAH Kerajaan</label>
+            </div>
+            <div class="flex items-center gap-1 bg-gray-100 dark:bg-dark-700 rounded-lg p-0.5">
+              <label class="cursor-pointer">
+                <input type="radio" name="ai_eligible_mode" value="exact" <%= (settings.ai_eligible_mode || 'ai_generated') === 'exact' ? 'checked' : '' %> class="peer hidden">
+                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">📋 Tepat</span>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="ai_eligible_mode" value="ai_generated" <%= (settings.ai_eligible_mode || 'ai_generated') === 'ai_generated' ? 'checked' : '' %> class="peer hidden">
+                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">🤖 AI</span>
+              </label>
+            </div>
           </div>
           <textarea name="ai_eligible_message" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_eligible_message || defaults.ai_eligible_message %></textarea>
         </div>
 
+        <!-- Tidak Layak -->
         <div>
-          <div class="flex items-center gap-2 mb-1.5">
-            <span class="w-2 h-2 rounded-full bg-red-500"></span>
-            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Tidak Layak</label>
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span>
+              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Tidak Layak</label>
+            </div>
+            <div class="flex items-center gap-1 bg-gray-100 dark:bg-dark-700 rounded-lg p-0.5">
+              <label class="cursor-pointer">
+                <input type="radio" name="ai_not_eligible_mode" value="exact" <%= (settings.ai_not_eligible_mode || 'ai_generated') === 'exact' ? 'checked' : '' %> class="peer hidden">
+                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">📋 Tepat</span>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="ai_not_eligible_mode" value="ai_generated" <%= (settings.ai_not_eligible_mode || 'ai_generated') === 'ai_generated' ? 'checked' : '' %> class="peer hidden">
+                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">🤖 AI</span>
+              </label>
+            </div>
           </div>
           <textarea name="ai_not_eligible_message" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_not_eligible_message || defaults.ai_not_eligible_message %></textarea>
         </div>
 
+        <!-- Eskalasi -->
         <div>
-          <div class="flex items-center gap-2 mb-1.5">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Eskalasi ke Pegawai</label>
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Eskalasi ke Pegawai</label>
+            </div>
+            <div class="flex items-center gap-1 bg-gray-100 dark:bg-dark-700 rounded-lg p-0.5">
+              <label class="cursor-pointer">
+                <input type="radio" name="ai_escalation_mode" value="exact" <%= (settings.ai_escalation_mode || 'ai_generated') === 'exact' ? 'checked' : '' %> class="peer hidden">
+                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">📋 Tepat</span>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="ai_escalation_mode" value="ai_generated" <%= (settings.ai_escalation_mode || 'ai_generated') === 'ai_generated' ? 'checked' : '' %> class="peer hidden">
+                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">🤖 AI</span>
+              </label>
+            </div>
           </div>
-          <textarea name="ai_escalation_message" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_escalation_message || defaults.ai_escalation_message %></textarea>
+          <textarea name="ai_escalation_message" rows="4" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_escalation_message || defaults.ai_escalation_message %></textarea>
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">Placeholder: <code class="bg-gray-100 dark:bg-dark-700 px-1 rounded">{agent_name}</code> <code class="bg-gray-100 dark:bg-dark-700 px-1 rounded">{agent_phone}</code> <code class="bg-gray-100 dark:bg-dark-700 px-1 rounded">{agent_wa_url}</code></p>
         </div>
 
-        <div>
-          <div class="flex items-center gap-2 mb-1.5">
-            <span class="w-2 h-2 rounded-full bg-violet-500"></span>
-            <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Slip Gaji Diterima</label>
-          </div>
-          <textarea name="ai_slip_received_message" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_slip_received_message || defaults.ai_slip_received_message %></textarea>
-          <p class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">⚡ Ini dihantar <strong>secara tepat</strong> (bukan contoh) apabila pelanggan hantar gambar/dokumen.</p>
-        </div>
       </div>
     </div>
   </div>
@@ -144,13 +191,27 @@
           <input type="hidden" name="ai_escalation_triggers" id="escalationTriggersInput" value="">
           <% const triggers = (settings.ai_escalation_triggers || defaults.ai_escalation_triggers).split(','); %>
           <div class="space-y-3">
-            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
-              <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="slip_received" <%= triggers.includes('slip_received') ? 'checked' : '' %>>
-              <div>
-                <span class="text-sm font-medium text-gray-900 dark:text-white">Slip gaji diterima</span>
-                <p class="text-xs text-gray-500 dark:text-dark-400">Pelanggan hantar gambar atau dokumen</p>
+            <div class="p-3 rounded-xl border border-gray-200 dark:border-dark-700">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-sm font-medium text-gray-900 dark:text-white">📄 Dokumen / Slip Gaji Diterima</span>
               </div>
-            </label>
+              <div class="flex gap-3">
+                <label class="flex-1 cursor-pointer">
+                  <input type="radio" name="ai_slip_mode" value="smart_ocr" <%= (settings.ai_slip_mode || 'smart_ocr') === 'smart_ocr' ? 'checked' : '' %> class="peer hidden">
+                  <div class="p-2.5 rounded-lg border-2 border-gray-200 dark:border-dark-600 peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-500/10 text-center transition-all">
+                    <span class="text-xs font-semibold text-gray-700 dark:text-dark-300">🤖 Smart OCR</span>
+                    <p class="text-[10px] text-gray-400 dark:text-dark-500 mt-0.5">Baca slip → AI sahkan</p>
+                  </div>
+                </label>
+                <label class="flex-1 cursor-pointer">
+                  <input type="radio" name="ai_slip_mode" value="auto_escalate" <%= (settings.ai_slip_mode || 'smart_ocr') === 'auto_escalate' ? 'checked' : '' %> class="peer hidden">
+                  <div class="p-2.5 rounded-lg border-2 border-gray-200 dark:border-dark-600 peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-500/10 text-center transition-all">
+                    <span class="text-xs font-semibold text-gray-700 dark:text-dark-300">⚡ Auto Escalate</span>
+                    <p class="text-[10px] text-gray-400 dark:text-dark-500 mt-0.5">Terus escalate ke pegawai</p>
+                  </div>
+                </label>
+              </div>
+            </div>
             <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700/50 cursor-pointer transition-colors">
               <input type="checkbox" class="escalation-cb rounded border-gray-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 w-4 h-4" value="pre_eligible" <%= triggers.includes('pre_eligible') ? 'checked' : '' %>>
               <div>

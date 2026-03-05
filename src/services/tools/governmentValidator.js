@@ -46,6 +46,15 @@ async function validate({ employer_name }) {
       };
     }
 
+    // Prioritize exact name match when multiple results found
+    if (matches.length > 1) {
+      const exact = matches.find(e =>
+        e.name.toLowerCase() === searchLower ||
+        (e.code && e.code.toLowerCase() === searchLower)
+      );
+      if (exact) matches = [exact];
+    }
+
     // Single match
     if (matches.length === 1) {
       const m = matches[0];

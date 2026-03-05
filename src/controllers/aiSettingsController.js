@@ -18,8 +18,11 @@ exports.updateAiSettings = async (req, res) => {
     const fields = [
       'ai_agent_name', 'ai_koperasi_name', 'ai_greeting_message',
       'ai_eligible_message', 'ai_not_eligible_message', 'ai_escalation_message',
-      'ai_slip_received_message', 'ai_product_info', 'ai_custom_instructions',
+      'ai_product_info', 'ai_custom_instructions',
       'ai_escalation_triggers', 'ai_bad_words', 'ai_manual_keywords',
+      'ai_competitor_keywords',
+      'ai_greeting_mode', 'ai_eligible_mode', 'ai_not_eligible_mode', 'ai_escalation_mode',
+      'ai_slip_mode',
     ];
     for (const key of fields) {
       if (req.body[key] !== undefined) {

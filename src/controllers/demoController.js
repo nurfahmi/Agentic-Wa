@@ -168,7 +168,12 @@ exports.sendMessage = async (req, res) => {
 
     let replyText = aiResult.reply_text;
     if (escalated && escalated.dutyAgent) {
-      replyText += `\n\nPegawai bertugas: ${escalated.dutyAgent.name}\nNo. telefon: ${escalated.dutyAgent.phone}`;
+      const phone = escalated.dutyAgent.phone.replace(/[\s\-\(\)]/g, '');
+      const waPhone = phone.startsWith('0') ? '6' + phone : phone.startsWith('+') ? phone.slice(1) : phone;
+      replyText = (aiSettings.ai_escalation_message || replyText)
+        .replace(/{agent_name}/g, escalated.dutyAgent.name)
+        .replace(/{agent_phone}/g, escalated.dutyAgent.phone)
+        .replace(/{agent_wa_url}/g, `https://wa.me/${waPhone}`);
     }
 
     // Store AI response
@@ -223,8 +228,12 @@ exports.uploadFile = async (req, res) => {
     const conversation = await prisma.conversation.findUnique({ where: { id: parseInt(conversationId) } });
     if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
 
-    // Compress image to max 150KB
-    const compressedPath = await compressImage(req.file.path);
+    // Compress image (skip for non-image files like PDF)
+    let compressedPath = req.file.path;
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
+      compressedPath = await compressImage(req.file.path);
+    }
 
     // Store document record
     const doc = await prisma.document.create({
@@ -249,15 +258,24 @@ exports.uploadFile = async (req, res) => {
       },
     });
 
-    // Run OCR with timeout
+    // Run OCR / text extraction
     let ocrText = '';
     let ocrResult = {};
     try {
-      const ocrPromise = Tesseract.recognize(compressedPath, 'eng+msa');
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('OCR timeout')), 20000));
-      const { data: { text } } = await Promise.race([ocrPromise, timeoutPromise]);
-      ocrText = text;
-      ocrResult = parseOcrText(text);
+      if (ext === '.pdf') {
+        // PDF: extract text using pdf-parse
+        const pdfParse = require('pdf-parse');
+        const pdfBuffer = fs.readFileSync(compressedPath);
+        const pdfData = await pdfParse(pdfBuffer);
+        ocrText = pdfData.text || '';
+      } else {
+        // Image: OCR with Tesseract
+        const ocrPromise = Tesseract.recognize(compressedPath, 'eng+msa');
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('OCR timeout')), 20000));
+        const { data: { text } } = await Promise.race([ocrPromise, timeoutPromise]);
+        ocrText = text;
+      }
+      ocrResult = parseOcrText(ocrText);
       await prisma.document.update({
         where: { id: doc.id },
         data: { ocrResult, ocrStatus: 'COMPLETED' },
@@ -274,6 +292,22 @@ exports.uploadFile = async (req, res) => {
       : `Pelanggan telah memuat naik dokumen (${req.file.originalname}). Teks yang dikesan:\n${ocrText.substring(0, 500)}\n\nSila analisa dokumen ini.`;
 
     const aiResult = await orchestrator.processMessage(conversation.id, ocrMessage);
+    const { getAiSettings } = require('../utils/getAiSettings');
+    const aiSettings = await getAiSettings();
+
+    // Check escalation and get duty agent
+    const escalationService = require('../services/escalationService');
+    const escalated = await escalationService.checkAutoEscalation(conversation.id, ocrMessage, aiResult);
+
+    let replyText = aiResult.reply_text;
+    if (escalated && escalated.dutyAgent) {
+      const phone = escalated.dutyAgent.phone.replace(/[\s\-\(\)]/g, '');
+      const waPhone = phone.startsWith('0') ? '6' + phone : phone.startsWith('+') ? phone.slice(1) : phone;
+      replyText = (aiSettings.ai_escalation_message || replyText)
+        .replace(/{agent_name}/g, escalated.dutyAgent.name)
+        .replace(/{agent_phone}/g, escalated.dutyAgent.phone)
+        .replace(/{agent_wa_url}/g, `https://wa.me/${waPhone}`);
+    }
 
     // Store AI response
     await prisma.message.create({
@@ -281,7 +315,7 @@ exports.uploadFile = async (req, res) => {
         conversationId: conversation.id,
         direction: 'OUTBOUND',
         type: 'TEXT',
-        content: aiResult.reply_text,
+        content: replyText,
         isAiGenerated: true,
       },
     });
@@ -291,12 +325,13 @@ exports.uploadFile = async (req, res) => {
       updateData.eligibility = aiResult.eligibility_status;
     }
     if (aiResult.confidence) updateData.aiConfidence = aiResult.confidence;
-    if (aiResult.escalate) updateData.status = 'ESCALATED';
+    if (escalated && escalated.escalated) updateData.status = 'ESCALATED';
+    else if (aiResult.escalate) updateData.status = 'ESCALATED';
     await prisma.conversation.update({ where: { id: conversation.id }, data: updateData });
 
     res.json({
       success: true,
-      reply: aiResult.reply_text,
+      reply: replyText,
       ocr: ocrResult,
       debug: {
         intent: aiResult.intent,
@@ -347,18 +382,37 @@ function parseOcrText(text) {
 
   for (const line of lines) {
     const lower = line.toLowerCase();
-    if (lower.includes('nama') || lower.includes('name')) {
+
+    // Name: "Nama: Janet Goblin" or "Name: ..."
+    if (!result.name && (lower.includes('nama') || lower.includes('name'))) {
       const m = line.match(/(?:nama|name)\s*[:\-]\s*(.+)/i);
       if (m) result.name = m[1].trim();
     }
-    if (lower.includes('majikan') || lower.includes('employer') || lower.includes('jabatan') || lower.includes('kementerian')) {
-      const m = line.match(/(?:majikan|employer|jabatan|kementerian)\s*[:\-]\s*(.+)/i);
+
+    // Employer: try with separator first "Majikan: XXX"
+    if (!result.employer && (lower.includes('majikan') || lower.includes('employer'))) {
+      const m = line.match(/(?:majikan|employer)\s*[:\-]\s*(.+)/i);
       if (m) result.employer = m[1].trim();
     }
-    if (lower.includes('gaji') || lower.includes('salary') || lower.includes('pendapatan')) {
-      const m = line.match(/(?:rm|myr)?\s*([\d,]+\.?\d*)/i);
-      if (m) result.monthly_salary = parseFloat(m[1].replace(/,/g, ''));
+
+    // Employer: standalone line "KEMENTERIAN KEWANGAN" or "JABATAN AKAUNTAN NEGARA"
+    if (!result.employer) {
+      if (/^kementerian\s+/i.test(line)) {
+        result.employer = line.trim();
+      } else if (/^jabatan\s+/i.test(line) && !lower.includes('jawatan')) {
+        result.employer = line.trim();
+      }
     }
+
+    // Salary: "Gaji Pokok 4,924.14" or "RM 4,924.14" or "Pendapatan: 5000"
+    if (!result.monthly_salary && (lower.includes('gaji') || lower.includes('salary') || lower.includes('pendapatan'))) {
+      const m = line.match(/(?:rm|myr)?\s*([\d,]+\.?\d*)/i);
+      if (m) {
+        const val = parseFloat(m[1].replace(/,/g, ''));
+        if (val > 100) result.monthly_salary = val; // ignore small numbers
+      }
+    }
+
     if (lower.includes('tetap') || lower.includes('permanent')) result.employment_type = 'TETAP';
     else if (lower.includes('kontrak') || lower.includes('contract')) result.employment_type = 'KONTRAK';
   }
@@ -366,3 +420,4 @@ function parseOcrText(text) {
   result.document_valid = !!(result.name && result.monthly_salary > 0);
   return result;
 }
+
