@@ -16,17 +16,16 @@ const CATEGORY_TO_STAGE = {
 };
 
 /**
- * Stage-aware example selection.
- * 1. Always include priority >= 8 (critical examples)
- * 2. Match by conversation stage
- * 3. Group multi-turn flows together
+ * Simple example selection:
+ * 1. Match by conversation stage
+ * 2. Match by category keywords
+ * 3. Include full flows if any turn matched
  * 4. Separate negative examples
- * 5. Fallback to keyword-scored examples
  */
 async function getRelevantExamples(userMessage, conversationStage) {
   const allExamples = await prisma.chatExample.findMany({
     where: { active: true },
-    orderBy: [{ priority: 'desc' }, { turnOrder: 'asc' }, { createdAt: 'desc' }],
+    orderBy: [{ turnOrder: 'asc' }, { createdAt: 'desc' }],
   });
 
   if (!allExamples.length) return '';
@@ -37,24 +36,15 @@ async function getRelevantExamples(userMessage, conversationStage) {
   const includedIds = new Set();
   const includedFlows = new Set();
 
-  // 1. Always include high-priority examples (priority >= 8)
+  // Separate negative examples
   for (const ex of allExamples) {
-    if (ex.priority >= 8 && !ex.isNegative) {
-      if (!includedIds.has(ex.id)) {
-        selected.push(ex);
-        includedIds.add(ex.id);
-        if (ex.flowId) includedFlows.add(ex.flowId);
-      }
-    }
-    if (ex.isNegative) {
-      negative.push(ex);
-    }
+    if (ex.isNegative) negative.push(ex);
   }
 
-  // 2. Stage-matched examples
+  // 1. Stage-matched examples
   if (conversationStage) {
     for (const ex of allExamples) {
-      if (includedIds.has(ex.id) || ex.isNegative) continue;
+      if (ex.isNegative) continue;
       if (ex.stage === conversationStage) {
         selected.push(ex);
         includedIds.add(ex.id);
@@ -74,23 +64,25 @@ async function getRelevantExamples(userMessage, conversationStage) {
     }
   }
 
-  // 4. Keyword-scored fallback if not enough stage matches
-  if (selected.length < 8) {
-    const remaining = allExamples.filter(ex => !includedIds.has(ex.id) && !ex.isNegative);
-    const scored = remaining.map(ex => {
-      let score = 0;
-      const custLower = ex.customerMessage.toLowerCase();
-      if (custLower === lower) score += 10;
-      if (lower.includes(custLower) || custLower.includes(lower)) score += 5;
-      if (['scam', 'scammer', 'tipu', 'penipu'].some(w => lower.includes(w)) && ex.category === 'scam_defense') score += 8;
-      if (['pm', 'hi', 'salam', 'assalam'].some(w => lower.includes(w)) && ex.category === 'greeting') score += 8;
-      if (['berapa', 'kadar', 'rate', 'jumlah'].some(w => lower.includes(w)) && ex.category === 'product_info') score += 8;
-      return { ...ex, score };
-    }).filter(e => e.score > 0).sort((a, b) => b.score - a.score);
-
-    for (const ex of scored.slice(0, 8 - selected.length)) {
-      selected.push(ex);
-      includedIds.add(ex.id);
+  // 2. Category keyword matching
+  const categoryMap = {
+    scam_defense: ['scam', 'scammer', 'tipu', 'penipu', 'penipuan'],
+    greeting: ['pm', 'hi', 'salam', 'assalam', 'hello'],
+    product_info: ['berapa', 'kadar', 'rate', 'jumlah', 'tempoh'],
+    eligibility_ask: ['layak', 'syarat', 'boleh mohon'],
+    employer_check: ['kementerian', 'jabatan', 'majikan'],
+    follow_up: ['follow up', 'teruskan', 'berminat'],
+  };
+  for (const [cat, keywords] of Object.entries(categoryMap)) {
+    if (keywords.some(kw => lower.includes(kw))) {
+      for (const ex of allExamples) {
+        if (includedIds.has(ex.id) || ex.isNegative) continue;
+        if (ex.category === cat) {
+          selected.push(ex);
+          includedIds.add(ex.id);
+          if (ex.flowId) includedFlows.add(ex.flowId);
+        }
+      }
     }
   }
 
@@ -106,17 +98,16 @@ async function getRelevantExamples(userMessage, conversationStage) {
 
   // Format selected examples (group flows together)
   if (selected.length > 0) {
-    // Sort: flows first (by flowId + turnOrder), then singles
     selected.sort((a, b) => {
       if (a.flowId && b.flowId && a.flowId === b.flowId) return a.turnOrder - b.turnOrder;
       if (a.flowId && !b.flowId) return -1;
       if (!a.flowId && b.flowId) return 1;
-      return (b.priority || 5) - (a.priority || 5);
+      return 0;
     });
 
     const lines = [];
     let currentFlow = null;
-    for (const ex of selected) {
+    for (const ex of selected.slice(0, 10)) {
       if (ex.flowId && ex.flowId !== currentFlow) {
         currentFlow = ex.flowId;
         lines.push(`\n--- Aliran perbualan ---`);

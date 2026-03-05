@@ -75,6 +75,34 @@ try {
       // Run through AI orchestrator
       const aiResult = await orchestrator.processMessage(conversationId, messageContent);
 
+      // Track consecutive off-topic messages
+      const OFF_TOPIC_INTENTS = ['off_topic', 'unknown', 'gibberish', 'spam'];
+      const isOffTopic = OFF_TOPIC_INTENTS.includes(aiResult.intent);
+      const prevMeta = conv?.metadata || {};
+      const offTopicCount = isOffTopic ? (prevMeta.offTopicCount || 0) + 1 : 0;
+      const MAX_OFF_TOPIC = 3;
+
+      if (offTopicCount >= MAX_OFF_TOPIC) {
+        // Too many unrelated messages — AI disengages
+        await prisma.conversation.update({
+          where: { id: conversationId },
+          data: {
+            status: 'AGENT_HANDLING',
+            metadata: { ...prevMeta, offTopicCount, aiDisengaged: true, disengagedAt: new Date().toISOString() },
+          },
+        });
+        logger.info(`Conversation ${conversationId}: ${offTopicCount} consecutive off-topic messages. AI disengaged.`);
+        return;
+      }
+
+      // Update off-topic counter in metadata
+      if (offTopicCount !== (prevMeta.offTopicCount || 0)) {
+        await prisma.conversation.update({
+          where: { id: conversationId },
+          data: { metadata: { ...prevMeta, offTopicCount } },
+        });
+      }
+
       // Check auto-escalation
       const escalated = await escalationService.checkAutoEscalation(conversationId, messageContent, aiResult);
 
