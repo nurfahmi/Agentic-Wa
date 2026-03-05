@@ -167,6 +167,8 @@ exports.sendMessage = async (req, res) => {
     const escalated = await escalationService.checkAutoEscalation(conversation.id, message, aiResult);
 
     let replyText = aiResult.reply_text;
+    let replyImage = null;
+
     if (escalated && escalated.dutyAgent) {
       const phone = escalated.dutyAgent.phone.replace(/[\s\-\(\)]/g, '');
       const waPhone = phone.startsWith('0') ? '6' + phone : phone.startsWith('+') ? phone.slice(1) : phone;
@@ -176,13 +178,22 @@ exports.sendMessage = async (req, res) => {
         .replace(/{agent_wa_url}/g, `https://wa.me/${waPhone}`);
     }
 
+    // Scam defense: attach image
+    if (aiResult.intent === 'scam_defense' && aiSettings.ai_scam_defense_image) {
+      replyImage = aiSettings.ai_scam_defense_image;
+      if (aiSettings.ai_scam_defense_mode === 'exact') {
+        replyText = aiSettings.ai_scam_defense_caption || replyText;
+      }
+    }
+
     // Store AI response
     await prisma.message.create({
       data: {
         conversationId: conversation.id,
         direction: 'OUTBOUND',
-        type: 'TEXT',
+        type: replyImage ? 'IMAGE' : 'TEXT',
         content: replyText,
+        mediaUrl: replyImage || null,
         isAiGenerated: true,
       },
     });
@@ -201,6 +212,7 @@ exports.sendMessage = async (req, res) => {
     res.json({
       success: true,
       reply: replyText,
+      image: replyImage,
       debug: {
         intent: aiResult.intent,
         confidence: aiResult.confidence,
@@ -300,6 +312,8 @@ exports.uploadFile = async (req, res) => {
     const escalated = await escalationService.checkAutoEscalation(conversation.id, ocrMessage, aiResult);
 
     let replyText = aiResult.reply_text;
+    let replyImage = null;
+
     if (escalated && escalated.dutyAgent) {
       const phone = escalated.dutyAgent.phone.replace(/[\s\-\(\)]/g, '');
       const waPhone = phone.startsWith('0') ? '6' + phone : phone.startsWith('+') ? phone.slice(1) : phone;
@@ -309,13 +323,22 @@ exports.uploadFile = async (req, res) => {
         .replace(/{agent_wa_url}/g, `https://wa.me/${waPhone}`);
     }
 
+    // Scam defense: attach image
+    if (aiResult.intent === 'scam_defense' && aiSettings.ai_scam_defense_image) {
+      replyImage = aiSettings.ai_scam_defense_image;
+      if (aiSettings.ai_scam_defense_mode === 'exact') {
+        replyText = aiSettings.ai_scam_defense_caption || replyText;
+      }
+    }
+
     // Store AI response
     await prisma.message.create({
       data: {
         conversationId: conversation.id,
         direction: 'OUTBOUND',
-        type: 'TEXT',
+        type: replyImage ? 'IMAGE' : 'TEXT',
         content: replyText,
+        mediaUrl: replyImage || null,
         isAiGenerated: true,
       },
     });
@@ -332,6 +355,7 @@ exports.uploadFile = async (req, res) => {
     res.json({
       success: true,
       reply: replyText,
+      image: replyImage,
       ocr: ocrResult,
       debug: {
         intent: aiResult.intent,

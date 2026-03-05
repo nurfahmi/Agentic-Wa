@@ -89,6 +89,9 @@
                 ? 'bg-primary-500 text-white rounded-2xl rounded-br-md' 
                 : 'bg-white dark:bg-dark-800 text-gray-900 dark:text-white rounded-2xl rounded-bl-md border border-gray-200 dark:border-dark-700'"
                 class="px-4 py-3 shadow-sm">
+                <template x-if="msg.image">
+                  <img :src="msg.image" class="rounded-lg mb-2 max-w-full" style="max-height:200px">
+                </template>
                 <p class="text-sm leading-relaxed whitespace-pre-wrap" x-text="msg.content"></p>
               </div>
               <div class="flex items-center gap-2 mt-1 px-1" :class="msg.direction === 'INBOUND' ? 'justify-end' : ''">
@@ -333,7 +336,7 @@ function demoChat() {
           if (data.manualHandling) this.convStatus = 'AGENT_HANDLING';
           this.lastDebug = data.debug || null;
         } else {
-          this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: data.reply, isAiGenerated: true, type: 'TEXT', timestamp: new Date() });
+          this.messages.push({ id: Date.now()+1, direction: 'OUTBOUND', content: data.reply, image: data.image || null, isAiGenerated: true, type: data.image ? 'IMAGE' : 'TEXT', timestamp: new Date() });
           this.lastDebug = data.debug;
           if (data.debug.eligibility_status) this.eligibility = data.debug.eligibility_status;
           if (data.debug.escalate) this.convStatus = 'ESCALATED';
