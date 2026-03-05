@@ -22,6 +22,9 @@ const DEFAULTS = {
   ai_not_eligible_mode: 'ai_generated',
   ai_escalation_mode: 'ai_generated',
   ai_slip_mode: 'smart_ocr',
+  ai_scam_defense_image: '',
+  ai_scam_defense_caption: 'Kami adalah koperasi berdaftar di bawah Suruhanjaya Koperasi Malaysia (SKM). Sila rujuk sijil pendaftaran kami.',
+  ai_scam_defense_mode: 'ai_generated',
 };
 
 async function getAiSettings() {
