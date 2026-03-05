@@ -111,27 +111,6 @@
           <textarea name="ai_greeting_message" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_greeting_message || defaults.ai_greeting_message %></textarea>
         </div>
 
-        <!-- SAH Kerajaan -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Pelanggan SAH Kerajaan</label>
-            </div>
-            <div class="flex items-center gap-1 bg-gray-100 dark:bg-dark-700 rounded-lg p-0.5">
-              <label class="cursor-pointer">
-                <input type="radio" name="ai_eligible_mode" value="exact" <%= (settings.ai_eligible_mode || 'ai_generated') === 'exact' ? 'checked' : '' %> class="peer hidden">
-                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">📋 Tepat</span>
-              </label>
-              <label class="cursor-pointer">
-                <input type="radio" name="ai_eligible_mode" value="ai_generated" <%= (settings.ai_eligible_mode || 'ai_generated') === 'ai_generated' ? 'checked' : '' %> class="peer hidden">
-                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">🤖 AI</span>
-              </label>
-            </div>
-          </div>
-          <textarea name="ai_eligible_message" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_eligible_message || defaults.ai_eligible_message %></textarea>
-        </div>
-
         <!-- Tidak Layak -->
         <div>
           <div class="flex items-center justify-between mb-1.5">

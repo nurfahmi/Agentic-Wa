@@ -214,7 +214,6 @@ ${ai.ai_product_info}
 
 ${ai.ai_custom_instructions ? `ARAHAN TAMBAHAN:\n${ai.ai_custom_instructions}\n` : ''}${await getRelevantExamples(userMessage, state.stage)}MESEJ BALASAN:
 - Greeting: "${ai.ai_greeting_message}" ${ai.ai_greeting_mode === 'exact' ? '→ GUNA TEPAT seperti tertulis' : '→ sesuaikan gaya, jangan salin tepat-tepat'}
-- SAH kerajaan: "${ai.ai_eligible_message}" ${ai.ai_eligible_mode === 'exact' ? '→ GUNA TEPAT seperti tertulis' : '→ sesuaikan gaya, jangan salin tepat-tepat'}
 - TIDAK layak: "${ai.ai_not_eligible_message}" ${ai.ai_not_eligible_mode === 'exact' ? '→ GUNA TEPAT seperti tertulis. Hanya tukar {reason}' : '→ sesuaikan gaya, jangan salin tepat-tepat'}
 - Eskalasi: "${ai.ai_escalation_message}" ${ai.ai_escalation_mode === 'exact' ? '→ GUNA TEPAT seperti tertulis' : '→ sesuaikan gaya, jangan salin tepat-tepat'}
 
