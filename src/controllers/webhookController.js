@@ -215,7 +215,7 @@ PERATURAN:
 - Jika ada "GAJI POKOK" atau "BASIC SALARY", guna nilai itu
 - Jika tidak pasti, guna jumlah pendapatan terbesar
 - Jika tidak dapat kenal pasti field, letak string kosong atau 0
-- employer: cari nama kementerian, jabatan, atau organisasi
+- employer: cari nama kementerian, jabatan, atau organisasi. WAJIB guna nama BAHASA MELAYU (contoh: "Suruhanjaya Komunikasi dan Multimedia Malaysia", bukan "Malaysian Communications and Multimedia Commission")
 - name: cari nama pekerja/pegawai`
         },
         { role: 'user', content: text.substring(0, 3000) }
