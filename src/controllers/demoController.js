@@ -287,7 +287,7 @@ exports.uploadFile = async (req, res) => {
         const { data: { text } } = await Promise.race([ocrPromise, timeoutPromise]);
         ocrText = text;
       }
-      ocrResult = parseOcrText(ocrText);
+      ocrResult = await parseOcrText(ocrText);
       await prisma.document.update({
         where: { id: doc.id },
         data: { ocrResult, ocrStatus: 'COMPLETED' },
