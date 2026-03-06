@@ -148,7 +148,7 @@ async function handleAfterStore(conversation, normalized) {
         }
       }
 
-      const parsed = parsePayslipText(ocrText);
+      const parsed = await parsePayslipText(ocrText);
       const ocrMessage = parsed.document_valid
         ? `Pelanggan telah memuat naik slip gaji. Hasil OCR:\nNama: ${parsed.name}\nMajikan: ${parsed.employer}\nGaji: RM${parsed.monthly_salary}\nJenis: ${parsed.employment_type}\n\nSila semak dan proses kelayakan.`
         : ocrText
@@ -184,36 +184,58 @@ async function handleAfterStore(conversation, normalized) {
   }
 }
 
-// Parse payslip text (same logic as demoController)
-function parsePayslipText(text) {
-  if (!text) return { name: '', employer: '', employment_type: '', monthly_salary: 0, document_valid: false };
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  const result = { name: '', employer: '', employment_type: '', monthly_salary: 0, document_valid: false };
+// AI-based payslip data extraction — handles any format
+async function parsePayslipText(text) {
+  const fallback = { name: '', employer: '', employment_type: '', monthly_salary: 0, document_valid: false };
+  if (!text || text.trim().length < 10) return fallback;
 
-  for (const line of lines) {
-    const lower = line.toLowerCase();
-    if (!result.name && (lower.includes('nama') || lower.includes('name'))) {
-      const m = line.match(/(?:nama|name)\s*[:\-]\s*(.+)/i);
-      if (m) result.name = m[1].trim();
-    }
-    if (!result.employer && (lower.includes('majikan') || lower.includes('employer'))) {
-      const m = line.match(/(?:majikan|employer)\s*[:\-]\s*(.+)/i);
-      if (m) result.employer = m[1].trim();
-    }
-    if (!result.employer) {
-      if (/^kementerian\s+/i.test(line)) result.employer = line.trim();
-      else if (/^jabatan\s+/i.test(line) && !lower.includes('jawatan')) result.employer = line.trim();
-    }
-    if (!result.monthly_salary && (lower.includes('gaji') || lower.includes('salary') || lower.includes('pendapatan'))) {
-      const m = line.match(/(?:rm|myr)?\s*([\d,]+\.?\d*)/i);
-      if (m) { const val = parseFloat(m[1].replace(/,/g, '')); if (val > 100) result.monthly_salary = val; }
-    }
-    if (lower.includes('tetap') || lower.includes('permanent')) result.employment_type = 'TETAP';
-    else if (lower.includes('kontrak') || lower.includes('contract')) result.employment_type = 'KONTRAK';
+  try {
+    const OpenAI = require('openai');
+    const { getOpenAIConfig } = require('../utils/getOpenAIConfig');
+    const { apiKey, model } = await getOpenAIConfig();
+    const openai = new OpenAI({ apiKey });
+
+    const response = await openai.chat.completions.create({
+      model: model || 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `Anda adalah parser slip gaji. Extract maklumat dari teks OCR slip gaji.
+
+Output JSON sahaja:
+{
+  "name": "nama pekerja",
+  "employer": "nama majikan/kementerian/jabatan",
+  "employment_type": "TETAP atau KONTRAK",
+  "monthly_salary": 0
+}
+
+PERATURAN:
+- monthly_salary = gaji pokok/basic salary (bukan gaji bersih/net pay)
+- Jika ada "GAJI POKOK" atau "BASIC SALARY", guna nilai itu
+- Jika tidak pasti, guna jumlah pendapatan terbesar
+- Jika tidak dapat kenal pasti field, letak string kosong atau 0
+- employer: cari nama kementerian, jabatan, atau organisasi
+- name: cari nama pekerja/pegawai`
+        },
+        { role: 'user', content: text.substring(0, 3000) }
+      ],
+      temperature: 0,
+      response_format: { type: 'json_object' },
+    });
+
+    const parsed = JSON.parse(response.choices[0].message.content);
+    return {
+      name: parsed.name || '',
+      employer: parsed.employer || '',
+      employment_type: parsed.employment_type || '',
+      monthly_salary: parseFloat(parsed.monthly_salary) || 0,
+      document_valid: !!(parsed.name && parseFloat(parsed.monthly_salary) > 0),
+    };
+  } catch (err) {
+    logger.error('AI payslip parse error:', err.message);
+    return fallback;
   }
-
-  result.document_valid = !!(result.name && result.monthly_salary > 0);
-  return result;
 }
 
 // ──────────────────────────────────────────────
