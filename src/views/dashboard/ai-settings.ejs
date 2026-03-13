@@ -100,8 +100,10 @@
             <div class="flex items-center gap-3">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="hidden" name="ai_auto_greeting" value="off">
-                <input type="checkbox" name="ai_auto_greeting" value="on" <%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? 'checked' : '' %> class="sr-only peer">
-                <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-dark-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-600"></div>
+                <input type="checkbox" name="ai_auto_greeting" value="on" <%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? 'checked' : '' %> id="autoGreetingToggle" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)" onchange="this.nextElementSibling.style.background=this.checked?'#4f46e5':'#d1d5db'; this.nextElementSibling.querySelector('span').style.transform=this.checked?'translateX(16px)':'translateX(0)'">
+                <div style="position:relative;width:36px;height:20px;border-radius:999px;background:<%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? '#4f46e5' : '#d1d5db' %>;transition:background .2s;cursor:pointer">
+                  <span style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.15);transform:<%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? 'translateX(16px)' : 'translateX(0)' %>"></span>
+                </div>
                 <span class="text-xs font-medium text-gray-500 dark:text-dark-400">Auto Balas</span>
               </label>
               <div class="flex items-center gap-1 bg-gray-100 dark:bg-dark-700 rounded-lg p-0.5">
