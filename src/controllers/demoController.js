@@ -159,7 +159,25 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
-    // 4. Run through the full AI orchestrator pipeline
+    // 4. Auto-greeting: if first inbound message and feature is enabled, reply directly
+    if (aiSettings.ai_auto_greeting === 'on') {
+      const inboundCount = await prisma.message.count({
+        where: { conversationId: conversation.id, direction: 'INBOUND' },
+      });
+      if (inboundCount <= 1) {
+        const replyText = aiSettings.ai_greeting_message;
+        await prisma.message.create({
+          data: { conversationId: conversation.id, direction: 'OUTBOUND', type: 'TEXT', content: replyText, isAiGenerated: true },
+        });
+        return res.json({
+          success: true,
+          reply: replyText,
+          debug: { reason: 'Auto-greeting (mesej pertama)', intent: 'greeting', confidence: 1 },
+        });
+      }
+    }
+
+    // 5. Run through the full AI orchestrator pipeline
     const aiResult = await orchestrator.processMessage(conversation.id, message);
 
     // Check escalation and get duty agent

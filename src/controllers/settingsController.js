@@ -42,7 +42,7 @@ exports.updateSettings = async (req, res) => {
       'ai_escalation_triggers', 'ai_silence_hours',
       'ai_competitor_keywords',
       'ai_greeting_mode', 'ai_not_eligible_mode', 'ai_escalation_mode',
-      'ai_slip_mode',
+      'ai_auto_greeting', 'ai_slip_mode',
     ];
     for (const key of fields) {
       if (req.body[key] !== undefined) {

@@ -67,6 +67,22 @@ try {
         return;
       }
 
+      // Auto-greeting: if first inbound message and feature is enabled, reply directly
+      if (aiSettings.ai_auto_greeting === 'on') {
+        const inboundCount = await prisma.message.count({
+          where: { conversationId, direction: 'INBOUND' },
+        });
+        if (inboundCount <= 1) {
+          const replyText = aiSettings.ai_greeting_message;
+          await whatsappService.sendText(conv.customerPhone, replyText);
+          await prisma.message.create({
+            data: { conversationId, direction: 'OUTBOUND', type: 'TEXT', content: replyText, isAiGenerated: true },
+          });
+          logger.info(`Conversation ${conversationId}: auto-greeting sent (first message)`);
+          return;
+        }
+      }
+
       // Send typing indicator before AI processing
       if (conv) {
         await whatsappService.sendPresence(conv.customerPhone, true);

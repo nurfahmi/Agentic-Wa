@@ -97,18 +97,27 @@
               <span class="w-2 h-2 rounded-full bg-blue-500"></span>
               <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Greeting / Mesej Pertama</label>
             </div>
-            <div class="flex items-center gap-1 bg-gray-100 dark:bg-dark-700 rounded-lg p-0.5">
-              <label class="cursor-pointer">
-                <input type="radio" name="ai_greeting_mode" value="exact" <%= (settings.ai_greeting_mode || 'ai_generated') === 'exact' ? 'checked' : '' %> class="peer hidden">
-                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">📋 Tepat</span>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="hidden" name="ai_auto_greeting" value="off">
+                <input type="checkbox" name="ai_auto_greeting" value="on" <%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? 'checked' : '' %> class="sr-only peer">
+                <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-dark-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-600"></div>
+                <span class="text-xs font-medium text-gray-500 dark:text-dark-400">Auto Balas</span>
               </label>
-              <label class="cursor-pointer">
-                <input type="radio" name="ai_greeting_mode" value="ai_generated" <%= (settings.ai_greeting_mode || 'ai_generated') === 'ai_generated' ? 'checked' : '' %> class="peer hidden">
-                <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">🤖 AI</span>
-              </label>
+              <div class="flex items-center gap-1 bg-gray-100 dark:bg-dark-700 rounded-lg p-0.5">
+                <label class="cursor-pointer">
+                  <input type="radio" name="ai_greeting_mode" value="exact" <%= (settings.ai_greeting_mode || 'ai_generated') === 'exact' ? 'checked' : '' %> class="peer hidden">
+                  <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">📋 Tepat</span>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="ai_greeting_mode" value="ai_generated" <%= (settings.ai_greeting_mode || 'ai_generated') === 'ai_generated' ? 'checked' : '' %> class="peer hidden">
+                  <span class="peer-checked:bg-white dark:peer-checked:bg-dark-600 peer-checked:shadow-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-500 dark:text-dark-400 peer-checked:text-gray-900 dark:peer-checked:text-white transition-all">🤖 AI</span>
+                </label>
+              </div>
             </div>
           </div>
           <textarea name="ai_greeting_message" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"><%= settings.ai_greeting_message || defaults.ai_greeting_message %></textarea>
+          <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">💡 Jika "Auto Balas" aktif, mesej pertama pelanggan akan terus dibalas dengan teks ini tanpa melalui AI.</p>
         </div>
 
         <!-- Tidak Layak -->
