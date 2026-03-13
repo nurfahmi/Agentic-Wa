@@ -98,11 +98,10 @@
               <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Greeting / Mesej Pertama</label>
             </div>
             <div class="flex items-center gap-3">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="hidden" name="ai_auto_greeting" value="off">
-                <input type="checkbox" name="ai_auto_greeting" value="on" <%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? 'checked' : '' %> id="autoGreetingToggle" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)" onchange="this.nextElementSibling.style.background=this.checked?'#4f46e5':'#d1d5db'; this.nextElementSibling.querySelector('span').style.transform=this.checked?'translateX(16px)':'translateX(0)'">
-                <div style="position:relative;width:36px;height:20px;border-radius:999px;background:<%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? '#4f46e5' : '#d1d5db' %>;transition:background .2s;cursor:pointer">
-                  <span style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.15);transform:<%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? 'translateX(16px)' : 'translateX(0)' %>"></span>
+              <label class="flex items-center gap-2 cursor-pointer" onclick="toggleAutoGreeting()">
+                <input type="hidden" name="ai_auto_greeting" id="autoGreetingValue" value="<%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? 'on' : 'off' %>">
+                <div id="autoGreetingTrack" style="position:relative;width:36px;height:20px;border-radius:999px;background:<%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? '#4f46e5' : '#d1d5db' %>;transition:background .2s;cursor:pointer">
+                  <span id="autoGreetingKnob" style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.15);transform:<%= (settings.ai_auto_greeting || defaults.ai_auto_greeting) === 'on' ? 'translateX(16px)' : 'translateX(0)' %>"></span>
                 </div>
                 <span class="text-xs font-medium text-gray-500 dark:text-dark-400">Auto Balas</span>
               </label>
@@ -355,6 +354,17 @@
 </style>
 
 <script>
+// Auto-greeting toggle
+function toggleAutoGreeting() {
+  const input = document.getElementById('autoGreetingValue');
+  const track = document.getElementById('autoGreetingTrack');
+  const knob = document.getElementById('autoGreetingKnob');
+  const isOn = input.value === 'on';
+  input.value = isOn ? 'off' : 'on';
+  track.style.background = isOn ? '#d1d5db' : '#4f46e5';
+  knob.style.transform = isOn ? 'translateX(0)' : 'translateX(16px)';
+}
+
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
